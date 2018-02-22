@@ -10,10 +10,19 @@ chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('index.js', () => {
-	let store;
+	let store, storage, memoryStorage;
 
 	beforeEach(() => {
+		memoryStorage = {};
 		store = new Store();
+		storage = {
+			getItem: sinon.stub()
+				.callsFake(key => memoryStorage[key]),
+			setItem: sinon.stub()
+				.callsFake((key, value) => memoryStorage[key] = value),
+			removeItem: sinon.stub()
+				.callsFake((key, value) => delete memoryStorage[key])
+		}
 	});
 
 	describe('constructor', () => {
@@ -191,15 +200,15 @@ describe('index.js', () => {
 
 		describe('with persistence', () => {
 			beforeEach(() => {
-				sinon.stub(store, 'persist');
+				sinon.spy(store, 'persistThrottled');
 			});
 
 			afterEach(() => {
-				store.persist.restore();
+				store.persistThrottled.restore();
 			});
 
-			it('should not call persist if action = loadPersisted', () => {
-				store.storage = {};
+			it('should not call persistThrottled if action = loadPersisted', () => {
+				store.storage = storage;
 				store.persistKeys = {
 					a: true
 				};
@@ -208,18 +217,18 @@ describe('index.js', () => {
 					a: 1
 				}, 'store.loadPersisted');
 
-				expect(store.persist).not.to.have.been.called;
+				expect(store.persistThrottled).not.to.have.been.called;
 			});
 
-			it('should not call persist if not persistKeys', () => {
+			it('should not call persistThrottled if not persistKeys', () => {
 				store.setState({
 					a: 1
 				});
 
-				expect(store.persist).not.to.have.been.called;
+				expect(store.persistThrottled).not.to.have.been.called;
 			});
 
-			it('should not call persist if persistKeys and not storage', () => {
+			it('should not call persistThrottled if persistKeys and not storage', () => {
 				store.persistKeys = {
 					a: true
 				};
@@ -228,11 +237,11 @@ describe('index.js', () => {
 					a: 1
 				});
 
-				expect(store.persist).not.to.have.been.called;
+				expect(store.persistThrottled).not.to.have.been.called;
 			});
 
-			it('should call persist if persistKeys and storage', () => {
-				store.storage = {};
+			it('should call persistThrottled if persistKeys and storage', () => {
+				store.storage = storage;
 				store.persistKeys = {
 					a: true
 				};
@@ -241,7 +250,7 @@ describe('index.js', () => {
 					a: 1
 				});
 
-				expect(store.persist).to.have.been.called;
+				expect(store.persistThrottled).to.have.been.called;
 			});
 		});
 	});
@@ -257,21 +266,7 @@ describe('index.js', () => {
 	});
 
 	describe('persistence', () => {
-		let storage;
-		let memoryStorage;
-
 		beforeEach(() => {
-			memoryStorage = {};
-
-			storage = {
-				getItem: sinon.stub()
-					.callsFake(key => memoryStorage[key]),
-				setItem: sinon.stub()
-					.callsFake((key, value) => memoryStorage[key] = value),
-				removeItem: sinon.stub()
-					.callsFake((key, value) => delete memoryStorage[key])
-			}
-
 			store = new Store({}, null, storage);
 		});
 

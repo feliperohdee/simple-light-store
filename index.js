@@ -9,6 +9,7 @@ const isUndefined = require('lodash/isUndefined');
 const merge = require('lodash/merge');
 const omit = require('lodash/omit');
 const size = require('lodash/size');
+const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
 const isObjectOnly = obj => isObject(obj) && !isArray(obj);
@@ -20,6 +21,7 @@ module.exports = class Store extends Events {
 		this.persistKeys = persistKeys;
 		this.storage = storage;
 		this.state = state;
+		this.persistThrottled = throttle(this.persist.bind(this), 50);
 
 		if (isObjectOnly(this.persistKeys) && storage) {
 			this.loadPersisted();
@@ -40,7 +42,7 @@ module.exports = class Store extends Events {
 			}
 
 			if (action !== 'store.loadPersisted' && isObjectOnly(this.persistKeys) && this.storage) {
-				this.persist(this.state);
+				this.persistThrottled(this.state);
 			}
 		}
 
