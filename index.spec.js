@@ -53,32 +53,37 @@ describe('index.js', () => {
 
 		describe('with persistence', () => {
 			beforeEach(() => {
+				sinon.stub(Store.prototype, 'cleanUnusedPersistKeys');
 				sinon.stub(Store.prototype, 'hydratePersisted');
 			});
 
 			afterEach(() => {
+				Store.prototype.cleanUnusedPersistKeys.restore();
 				Store.prototype.hydratePersisted.restore();
 			});
 
-			it('should not call hydratePersisted if not persistKeys', () => {
+			it('should not call cleanUnusedPersistKeys and hydratePersisted if not persistKeys', () => {
 				store = new Store();
 
+				expect(Store.prototype.cleanUnusedPersistKeys).not.to.have.been.called;
 				expect(Store.prototype.hydratePersisted).not.to.have.been.called;
 			});
 
-			it('should not call hydratePersisted if persistKeys and not storage', () => {
+			it('should not call cleanUnusedPersistKeys and hydratePersisted if persistKeys and not storage', () => {
 				store = new Store({}, {
 					a: true
 				});
 
+				expect(Store.prototype.cleanUnusedPersistKeys).not.to.have.been.called;
 				expect(Store.prototype.hydratePersisted).not.to.have.been.called;
 			});
 
-			it('should call hydratePersisted if persistKeys and storage', () => {
+			it('should call cleanUnusedPersistKeys and hydratePersisted if persistKeys and storage', () => {
 				store = new Store({}, {
 					a: true
 				}, {});
 
+				expect(Store.prototype.cleanUnusedPersistKeys).to.have.been.called;
 				expect(Store.prototype.hydratePersisted).to.have.been.called;
 			});
 		});
@@ -262,10 +267,47 @@ describe('index.js', () => {
 				getItem: sinon.stub()
 					.callsFake(key => memoryStorage[key]),
 				setItem: sinon.stub()
-					.callsFake((key, value) => memoryStorage[key] = value)
+					.callsFake((key, value) => memoryStorage[key] = value),
+				removeItem: sinon.stub()
+					.callsFake((key, value) => delete memoryStorage[key])
 			}
 
 			store = new Store({}, null, storage);
+		});
+
+		describe('cleanUnusedPersistKeys', () => {
+			it('should remove unused keys', () => {
+				memoryStorage = {
+					'__p.a': '1',
+					'__p.b': JSON.stringify({
+						a: 1,
+						b: 2,
+						c: 3,
+						d: 4,
+						e: {
+							a: 1,
+							b: 2,
+							c: 3,
+							d: 4
+						}
+					}),
+					'__p.c': JSON.stringify([1, 2, 3]),
+					'__p.d': "true",
+					'__p.e': "null"
+				}
+
+				store.persistKeys = {
+					a: false,
+					b: true,
+					c: false,
+					d: false,
+					e: false
+				};
+
+				store.cleanUnusedPersistKeys();
+
+				expect(_.size(memoryStorage)).to.equal(1)
+			});
 		});
 
 		describe('setPersist', () => {
@@ -283,11 +325,11 @@ describe('index.js', () => {
 				expect(memoryStorage).to.deep.equal({});
 			});
 
-			describe('json error', () => {
+			describe('error', () => {
 				beforeEach(() => {
 					sinon.stub(console, 'error');
 					sinon.stub(JSON, 'stringify')
-						.throws(new Error('ops'));
+						.throws(new Error());
 				});
 
 				afterEach(() => {
@@ -316,11 +358,11 @@ describe('index.js', () => {
 				expect(store.getPersist('key_')).to.be.undefined;
 			});
 
-			describe('json error', () => {
+			describe('error', () => {
 				beforeEach(() => {
 					sinon.stub(console, 'error');
 					sinon.stub(JSON, 'parse')
-						.throws(new Error('ops'));
+						.throws(new Error());
 				});
 
 				afterEach(() => {
@@ -330,6 +372,39 @@ describe('index.js', () => {
 
 				it('should return undefined', () => {
 					expect(store.getPersist('key')).to.be.undefined;
+				});
+			});
+		});
+
+		describe('removePersist', () => {
+			beforeEach(() => {
+				store.setPersist('key', 'value');
+			});
+
+			it('should remove', () => {
+				store.removePersist('key');
+
+				expect(memoryStorage).to.deep.equal({});
+			});
+
+			describe('error', () => {
+				beforeEach(() => {
+					sinon.stub(console, 'error');
+					store.storage.removeItem = () => {
+						throw new Error();
+					};
+				});
+
+				afterEach(() => {
+					console.error.restore();
+				});
+
+				it('should return undefined', () => {
+					store.removePersist('key');
+
+					expect(memoryStorage).to.deep.equal({
+						'__p.key': '"value"'
+					});
 				});
 			});
 		});

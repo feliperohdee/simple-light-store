@@ -22,6 +22,7 @@ module.exports = class Store extends Events {
 		this.state = state;
 
 		if (isObjectOnly(this.persistKeys) && storage) {
+			this.cleanUnusedPersistKeys();
 			this.hydratePersisted();
 		}
 	}
@@ -70,6 +71,14 @@ module.exports = class Store extends Events {
 		}
 	}
 
+	removePersist(key) {
+		try {
+			this.storage.removeItem(`__p.${key}`)
+		} catch (err) {
+			console.error(`can't remove persisted ${key}, reason:`, err);
+		}
+	}
+
 	persist(data) {
 		forEach(data, (value, key) => {
 			const persist = this.persistKeys && this.persistKeys[key];
@@ -77,6 +86,14 @@ module.exports = class Store extends Events {
 			if (persist) {
 				value = isObjectOnly(value) ? omit(value, persist._ignore) : value;
 				this.setPersist(key, value);
+			}
+		});
+	}
+
+	cleanUnusedPersistKeys() {
+		forEach(this.persistKeys, (value, key) => {
+			if(!value) {
+				this.removePersist(key);
 			}
 		});
 	}
