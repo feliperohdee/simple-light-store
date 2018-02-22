@@ -30,6 +30,58 @@ describe('index.js', () => {
 				a: 1
 			});
 		});
+
+		it('should let default persistKeys', () => {
+			expect(store.persistKeys).to.be.null;
+		});
+
+		it('should let default storage', () => {
+			expect(store.storage).to.be.null;
+		});
+
+		it('should let persistKeys', () => {
+			store = new Store({}, {});
+
+			expect(store.persistKeys).to.deep.equal({});
+		});
+
+		it('should let storage', () => {
+			store = new Store({}, null, {});
+
+			expect(store.storage).to.deep.equal({});
+		});
+
+		describe('with persistence', () => {
+			beforeEach(() => {
+				sinon.stub(Store.prototype, 'hydratePersisted');
+			});
+
+			afterEach(() => {
+				Store.prototype.hydratePersisted.restore();
+			});
+
+			it('should not call hydratePersisted if not persistKeys', () => {
+				store = new Store();
+
+				expect(Store.prototype.hydratePersisted).not.to.have.been.called;
+			});
+
+			it('should not call hydratePersisted if persistKeys and not storage', () => {
+				store = new Store({}, {
+					a: true
+				});
+
+				expect(Store.prototype.hydratePersisted).not.to.have.been.called;
+			});
+
+			it('should call hydratePersisted if persistKeys and storage', () => {
+				store = new Store({}, {
+					a: true
+				}, {});
+
+				expect(Store.prototype.hydratePersisted).to.have.been.called;
+			});
+		});
 	});
 
 	describe('setState', () => {
@@ -45,7 +97,7 @@ describe('index.js', () => {
 			const state = store.setState({
 				a: 1
 			});
-			
+
 			expect(state).to.deep.equal({
 				a: 1
 			});
@@ -67,7 +119,7 @@ describe('index.js', () => {
 			const state2 = store.setState({
 				c: 3
 			}, 'actionName');
-			
+
 			expect(state1).to.deep.equal({
 				b: 2
 			});
@@ -90,7 +142,7 @@ describe('index.js', () => {
 
 			const state1 = store.setState();
 			const state2 = store.setState(null);
-			
+
 			expect(state === state1 && state1 === state2).to.be.true;
 		});
 
@@ -118,10 +170,61 @@ describe('index.js', () => {
 			const state1 = store.setState({
 				a: 2
 			}, 'actionName');
-			
+
 			expect(store.trigger).to.have.been.calledTwice;
 			expect(store.trigger).to.have.been.calledWithExactly('setState', state);
 			expect(store.trigger).to.have.been.calledWithExactly('actionName', state1);
+		});
+
+		it('should not trigger if silent = true', () => {
+			store.setState({
+				a: 1
+			}, false, 'actionName', true);
+
+			expect(store.trigger).not.to.have.been.called;
+		});
+
+		describe('with persistence', () => {
+			beforeEach(() => {
+				sinon.stub(store, 'persist');
+			});
+
+			afterEach(() => {
+				store.persist.restore();
+			});
+
+			it('should not call persist if not persistKeys', () => {
+				store.setState({
+					a: 1
+				});
+
+				expect(store.persist).not.to.have.been.called;
+			});
+
+			it('should not call persist if persistKeys and not storage', () => {
+				store.persistKeys = {
+					a: true
+				};
+
+				store.setState({
+					a: 1
+				});
+
+				expect(store.persist).not.to.have.been.called;
+			});
+
+			it('should call persist if persistKeys and storage', () => {
+				store.storage = {};
+				store.persistKeys = {
+					a: true
+				};
+
+				store.setState({
+					a: 1
+				});
+
+				expect(store.persist).to.have.been.called;
+			});
 		});
 	});
 
@@ -132,6 +235,253 @@ describe('index.js', () => {
 			});
 
 			expect(store.getState()).to.equal(state);
+		});
+	});
+
+	describe('persistence', () => {
+		let storage;
+		let memoryStorage;
+
+		beforeEach(() => {
+			memoryStorage = {};
+
+			storage = {
+				getItem: sinon.stub()
+					.callsFake(key => memoryStorage[key]),
+				setItem: sinon.stub()
+					.callsFake((key, value) => memoryStorage[key] = value)
+			}
+
+			store = new Store({}, null, storage);
+		});
+
+		describe('setPersist', () => {
+			it('should persist stringified data', () => {
+				store.setPersist('key', 'value');
+
+				expect(memoryStorage).to.deep.equal({
+					'__p.key': '"value"'
+				});
+			});
+
+			it('should do nothing if empty data', () => {
+				store.setPersist('key');
+
+				expect(memoryStorage).to.deep.equal({});
+			});
+		});
+
+		describe('getPersist', () => {
+			beforeEach(() => {
+				store.setPersist('key', 'value');
+			});
+
+			it('should return data', () => {
+				expect(store.getPersist('key')).to.equal('value');
+			});
+
+			it('should return null', () => {
+				expect(store.getPersist('key_')).to.be.null;
+			});
+		});
+
+		describe('persist', () => {
+			const data = {
+				a: 1,
+				b: {
+					a: 1,
+					b: 2,
+					c: 3,
+					d: 4,
+					e: {
+						a: 1,
+						b: 2,
+						c: 3,
+						d: 4
+					}
+				},
+				c: [1, 2, 3],
+				d: true,
+				e: null
+			};
+
+			it('should not persist if no persistKeys', () => {
+				store.persist(data);
+
+				expect(memoryStorage).to.deep.equal({});
+			});
+
+			it('should persist persistKeys', () => {
+				store.persistKeys = {
+					a: true,
+					b: true,
+					c: true,
+					d: true,
+					e: true
+				};
+
+				store.persist(data);
+				expect(memoryStorage).to.deep.equal({
+					'__p.a': '1',
+					'__p.b': JSON.stringify({
+						a: 1,
+						b: 2,
+						c: 3,
+						d: 4,
+						e: {
+							a: 1,
+							b: 2,
+							c: 3,
+							d: 4
+						}
+					}),
+					'__p.c': JSON.stringify([1, 2, 3]),
+					'__p.d': "true",
+					'__p.e': "null"
+				});
+			});
+
+			it('should persist truly persistKeys only', () => {
+				store.persistKeys = {
+					a: true,
+					b: false
+				};
+
+				store.persist(data);
+				expect(memoryStorage).to.deep.equal({
+					'__p.a': '1'
+				});
+			});
+
+			it('should ignore inner keys', () => {
+				store.persistKeys = {
+					b: {
+						_ignore: ['a', 'b', 'e.a', 'e.b']
+					}
+				};
+
+				store.persist(data);
+				expect(memoryStorage).to.deep.equal({
+					'__p.b': JSON.stringify({
+						c: 3,
+						d: 4,
+						e: {
+							c: 3,
+							d: 4
+						}
+					}),
+				});
+			});
+		});
+
+		describe('hydratePersisted', () => {
+			beforeEach(() => {
+				sinon.spy(store, 'setState');
+
+				memoryStorage = {
+					'__p.a': '1',
+					'__p.b': JSON.stringify({
+						a: 1,
+						b: 2,
+						c: 3,
+						d: 4,
+						e: {
+							a: 1,
+							b: 2,
+							c: 3,
+							d: 4
+						}
+					}),
+					'__p.c': JSON.stringify([1, 2, 3]),
+					'__p.d': "true",
+					'__p.e': "null"
+				}
+
+				store.persistKeys = {
+					a: true,
+					b: {
+						_ignore: ['a', 'b', 'e.a', 'e.b']
+					},
+					c: true,
+					d: true,
+					e: true
+				};
+			});
+
+			afterEach(() => {
+				store.setState.restore();
+			});
+
+			it('should not load if no persistKeys', () => {
+				store.persistKeys = null;
+				store.hydratePersisted();
+
+				expect(store.getState()).to.deep.equal({});
+			});
+
+			it('should call setState silently', () => {
+				store.hydratePersisted();
+
+				expect(store.setState).to.have.callCount(5);
+				expect(store.setState).to.have.been.calledWith(sinon.match.object, 'hydratePersisted', true);
+			});
+
+			it('should load', () => {
+				store.hydratePersisted();
+				expect(store.getState()).to.deep.equal({
+					a: 1,
+					b: {
+						c: 3,
+						d: 4,
+						e: {
+							c: 3,
+							d: 4
+						}
+					},
+					c: [1, 2, 3],
+					d: true,
+					e: null
+				});
+			});
+
+			it('should load truly persistKeys only', () => {
+				store.persistKeys = {
+					a: true,
+					b: false
+				};
+
+				store.hydratePersisted();
+				expect(store.getState()).to.deep.equal({
+					a: 1
+				});
+			});
+
+			it('should merge existent state', () => {
+				store.state = {
+					b: {
+						e: {
+							a: 5
+						}
+					}
+				};
+
+				store.hydratePersisted();
+				expect(store.getState()).to.deep.equal({
+					a: 1,
+					b: {
+						c: 3,
+						d: 4,
+						e: {
+							a: 5,
+							c: 3,
+							d: 4
+						}
+					},
+					c: [1, 2, 3],
+					d: true,
+					e: null
+				});
+			});
 		});
 	});
 });
