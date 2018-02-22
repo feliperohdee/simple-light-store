@@ -53,38 +53,38 @@ describe('index.js', () => {
 
 		describe('with persistence', () => {
 			beforeEach(() => {
-				sinon.stub(Store.prototype, 'cleanUnusedPersistKeys');
-				sinon.stub(Store.prototype, 'hydratePersisted');
+				sinon.stub(Store.prototype, 'cleanFalsyPersistedKeys');
+				sinon.stub(Store.prototype, 'loadPersisted');
 			});
 
 			afterEach(() => {
-				Store.prototype.cleanUnusedPersistKeys.restore();
-				Store.prototype.hydratePersisted.restore();
+				Store.prototype.cleanFalsyPersistedKeys.restore();
+				Store.prototype.loadPersisted.restore();
 			});
 
-			it('should not call cleanUnusedPersistKeys and hydratePersisted if not persistKeys', () => {
+			it('should not call cleanFalsyPersistedKeys and loadPersisted if not persistKeys', () => {
 				store = new Store();
 
-				expect(Store.prototype.cleanUnusedPersistKeys).not.to.have.been.called;
-				expect(Store.prototype.hydratePersisted).not.to.have.been.called;
+				expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been.called;
+				expect(Store.prototype.loadPersisted).not.to.have.been.called;
 			});
 
-			it('should not call cleanUnusedPersistKeys and hydratePersisted if persistKeys and not storage', () => {
+			it('should not call cleanFalsyPersistedKeys and loadPersisted if persistKeys and not storage', () => {
 				store = new Store({}, {
 					a: true
 				});
 
-				expect(Store.prototype.cleanUnusedPersistKeys).not.to.have.been.called;
-				expect(Store.prototype.hydratePersisted).not.to.have.been.called;
+				expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been.called;
+				expect(Store.prototype.loadPersisted).not.to.have.been.called;
 			});
 
-			it('should call cleanUnusedPersistKeys and hydratePersisted if persistKeys and storage', () => {
+			it('should call cleanFalsyPersistedKeys and loadPersisted if persistKeys and storage', () => {
 				store = new Store({}, {
 					a: true
 				}, {});
 
-				expect(Store.prototype.cleanUnusedPersistKeys).to.have.been.called;
-				expect(Store.prototype.hydratePersisted).to.have.been.called;
+				expect(Store.prototype.cleanFalsyPersistedKeys).to.have.been.called;
+				expect(Store.prototype.loadPersisted).to.have.been.called;
 			});
 		});
 	});
@@ -198,7 +198,7 @@ describe('index.js', () => {
 				store.persist.restore();
 			});
 
-			it('should not call persist if action = hydratePersisted', () => {
+			it('should not call persist if action = loadPersisted', () => {
 				store.storage = {};
 				store.persistKeys = {
 					a: true
@@ -206,7 +206,7 @@ describe('index.js', () => {
 
 				store.setState({
 					a: 1
-				}, 'store.hydratePersisted');
+				}, 'store.loadPersisted');
 
 				expect(store.persist).not.to.have.been.called;
 			});
@@ -275,7 +275,7 @@ describe('index.js', () => {
 			store = new Store({}, null, storage);
 		});
 
-		describe('cleanUnusedPersistKeys', () => {
+		describe('cleanFalsyPersistedKeys', () => {
 			it('should remove unused keys', () => {
 				memoryStorage = {
 					'__p.a': '1',
@@ -304,7 +304,7 @@ describe('index.js', () => {
 					e: false
 				};
 
-				store.cleanUnusedPersistKeys();
+				store.cleanFalsyPersistedKeys();
 
 				expect(_.size(memoryStorage)).to.equal(1)
 			});
@@ -498,7 +498,7 @@ describe('index.js', () => {
 			});
 		});
 
-		describe('hydratePersisted', () => {
+		describe('loadPersisted', () => {
 			beforeEach(() => {
 				sinon.spy(store, 'setState');
 
@@ -538,20 +538,20 @@ describe('index.js', () => {
 
 			it('should not load if no persistKeys', () => {
 				store.persistKeys = null;
-				store.hydratePersisted();
+				store.loadPersisted();
 
 				expect(store.getState()).to.deep.equal({});
 			});
 
 			it('should call setState silently', () => {
-				store.hydratePersisted();
+				store.loadPersisted();
 
 				expect(store.setState).to.have.callCount(5);
-				expect(store.setState).to.have.been.calledWith(sinon.match.object, 'store.hydratePersisted', true);
+				expect(store.setState).to.have.been.calledWith(sinon.match.object, 'store.loadPersisted', true);
 			});
 
 			it('should load', () => {
-				store.hydratePersisted();
+				store.loadPersisted();
 				expect(store.getState()).to.deep.equal({
 					a: 1,
 					b: {
@@ -574,7 +574,7 @@ describe('index.js', () => {
 					b: false
 				};
 
-				store.hydratePersisted();
+				store.loadPersisted();
 				expect(store.getState()).to.deep.equal({
 					a: 1
 				});
@@ -589,7 +589,7 @@ describe('index.js', () => {
 					}
 				};
 
-				store.hydratePersisted();
+				store.loadPersisted();
 				expect(store.getState()).to.deep.equal({
 					a: 1,
 					b: {
@@ -617,7 +617,7 @@ describe('index.js', () => {
 					}
 				};
 
-				store.hydratePersisted();
+				store.loadPersisted();
 				expect(store.getState()).to.deep.equal({
 					b: {
 						e: {
