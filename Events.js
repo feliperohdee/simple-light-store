@@ -12,7 +12,7 @@ module.exports = class Events {
 		this._fns = null;
 	}
 
-	subscribe(event, context, fn, once = false) {
+	subscribe(event, context, fn, once = false, async = false) {
 		if (!isString(event)) {
 			[event, context, fn] = [null, event, context];
 		}
@@ -33,13 +33,25 @@ module.exports = class Events {
 			fn._once = once;
 		}
 
+		if (async) {
+			fn._async = async;
+		}
+
 		this._fns.push(fn);
 
 		return () => this.unsubscribe(event, context, fn);
 	}
 
+	subscribeAsync(event, context, fn) {
+		return this.subscribe(event, context, fn, false, true);
+	}
+
 	subscribeOnce(event, context, fn) {
 		return this.subscribe(event, context, fn, true);
+	}
+
+	subscribeOnceAsync(event, context, fn) {
+		return this.subscribe(event, context, fn, true, true);
 	}
 
 	unsubscribe(event, context, fn) {
@@ -65,7 +77,11 @@ module.exports = class Events {
 					this.unsubscribe(fn._event, fn._context, fn);
 				}
 
-				fn(event, data);
+				if(fn._async) {
+					setTimeout(() => fn(event, data));
+				} else {
+					fn(event, data);
+				}
 			}
 		});
 	}

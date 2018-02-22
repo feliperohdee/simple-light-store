@@ -58,6 +58,7 @@ describe('Events.js', () => {
 			expect(events._fns[0]._event).to.be.undefined;
 			expect(events._fns[0]._context).to.be.undefined;
 			expect(events._fns[0]._once).to.be.undefined;
+			expect(events._fns[0]._async).to.be.undefined;
 		});
 
 		it('should subscribe by context and function', () => {
@@ -67,6 +68,7 @@ describe('Events.js', () => {
 			expect(events._fns[0]._event).to.be.undefined;
 			expect(events._fns[0]._context).to.equal(this);
 			expect(events._fns[0]._once).to.be.undefined;
+			expect(events._fns[0]._async).to.be.undefined;
 		});
 
 		it('should subscribe by event, context and function', () => {
@@ -76,6 +78,7 @@ describe('Events.js', () => {
 			expect(events._fns[0]._event).to.equal('event');
 			expect(events._fns[0]._context).to.equal(this);
 			expect(events._fns[0]._once).to.be.undefined;
+			expect(events._fns[0]._async).to.be.undefined;
 		});
 
 		it('should subscribe by event, context, function and once', () => {
@@ -85,6 +88,33 @@ describe('Events.js', () => {
 			expect(events._fns[0]._event).to.equal('event');
 			expect(events._fns[0]._context).to.equal(this);
 			expect(events._fns[0]._once).to.be.true;
+			expect(events._fns[0]._async).to.be.undefined;
+		});
+
+		it('should subscribe by event, context, function once and async', () => {
+			events.subscribe('event', this, callback, true, true);
+
+			expect(events._fns[0]).to.equal(callback);
+			expect(events._fns[0]._event).to.equal('event');
+			expect(events._fns[0]._context).to.equal(this);
+			expect(events._fns[0]._once).to.be.true;
+			expect(events._fns[0]._async).to.be.true;
+		});
+	});
+
+	describe('subscribeAsync', () => {
+		beforeEach(() => {
+			sinon.spy(events, 'subscribe');
+		});
+
+		afterEach(() => {
+			events.subscribe.restore();
+		});
+
+		it('should call subscribe', () => {
+			events.subscribeAsync('event', this, callback);
+
+			expect(events.subscribe).to.have.been.calledWithExactly('event', this, callback, false, true);
 		});
 	});
 
@@ -101,6 +131,22 @@ describe('Events.js', () => {
 			events.subscribeOnce('event', this, callback);
 
 			expect(events.subscribe).to.have.been.calledWithExactly('event', this, callback, true);
+		});
+	});
+
+	describe('subscribeOnceAsync', () => {
+		beforeEach(() => {
+			sinon.spy(events, 'subscribe');
+		});
+
+		afterEach(() => {
+			events.subscribe.restore();
+		});
+
+		it('should call subscribe', () => {
+			events.subscribeOnceAsync('event', this, callback);
+
+			expect(events.subscribe).to.have.been.calledWithExactly('event', this, callback, true, true);
 		});
 	});
 
@@ -191,23 +237,42 @@ describe('Events.js', () => {
 	});
 
 	describe('trigger', () => {
-		const data = {
-			a: 1
-		};
-
 		beforeEach(() => {
 			events.subscribe(callback);
-			events.subscribe('event:namespace', this, callback2, true);
-			events.subscribe('event__', this, callback3, true);
+			events.subscribeOnce('event:namespace', callback2);
+			events.subscribeOnce('event_', callback3);
 		});
 
-		it('should trigger', () => {
+		afterEach(() => {
+			events.unsubscribe();
+		});
+
+		it('should trigger and unsubscribe once', () => {
+			const data = {
+				a: 1
+			};
+
 			events.trigger('event', data);
 
 			expect(callback).to.have.been.calledWithExactly('event', data);
 			expect(callback2).to.have.been.calledWithExactly('event', data);
 			expect(callback3).not.to.have.been.called;
 			expect(events._fns.length).to.equal(2);
+		});
+
+		describe('async', () => {
+			beforeEach(() => {
+				events.subscribeAsync(callback);
+				events.subscribe(callback2);
+			});
+
+			it('should call async last', done => {
+				events.trigger('event', {});
+				setTimeout(() => {
+					expect(callback2).to.have.been.calledBefore(callback);
+					done();
+				});
+			});
 		});
 	});
 });

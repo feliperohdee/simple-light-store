@@ -1,6 +1,7 @@
 const assign = require('lodash/assign');
 const isNil = require('lodash/isNil');
 const isString = require('lodash/isString');
+const isFunction = require('lodash/isFunction');
 const Events = require('./Events');
 
 module.exports = class Store extends Events {
@@ -12,7 +13,7 @@ module.exports = class Store extends Events {
 
 	setState(data, overwrite, action = 'setState') {
 		if (!isNil(data)) {
-			if (isString(overwrite)) {
+			if (isString(overwrite) || isFunction(overwrite)) {
 				[overwrite, action] = [null, overwrite];
 			}
 

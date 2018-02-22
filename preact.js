@@ -1,6 +1,8 @@
 const assign = require('lodash/assign');
+const forEach = require('lodash/forEach');
 const isFunction = require('lodash/isFunction');
 const isString = require('lodash/isString');
+const throttle = require('lodash/throttle');
 const {
 	h,
 	Component
@@ -27,51 +29,60 @@ function connect(mapStateToProps) {
 		mapStateToProps = select(mapStateToProps);
 	}
 
-	return Child => {
-		function Wrapper(props, {
-			store
-		}) {
-			let state = mapStateToProps(store ? store.getState() : {}, props);
-			let update = () => {
-				let mapped = mapStateToProps(store ? store.getState() : {}, this.props);
+	return Child => class extends Component {
+		constructor(props, context) {
+			super(props, context);
 
-				for (let i in mapped)
-					if (mapped[i] !== state[i]) {
-						state = mapped;
-						return this.setState(null);
-					}
-				for (let i in state)
-					if (!(i in mapped)) {
-						state = mapped;
-						return this.setState(null);
-					}
-			};
-
-			this.componentDidMount = () => {
-				update();
-				store.subscribe(update);
-			};
-
-			this.componentWillUnmount = () => {
-				store.unsubscribe(update);
-			};
-
-			this.render = props => h(Child, assign({}, props, state));
+			this.state = mapStateToProps(context.store.getState(), props);
+			this.forceUpdateThrottled = throttle(this.forceUpdate.bind(this), 50);
 		}
 
-		Wrapper.prototype = new Component();
+		update() {
+			const mapped = mapStateToProps(this.context.store.getState(), this.props);
 
-		return Wrapper.prototype.constructor = Wrapper;
-	};
+			forEach(mapped, (value, key) => {
+				if (value !== this.state[key]) {
+					this.state = mapped;
+
+					return this.forceUpdateThrottled();
+				}
+			});
+
+			forEach(this.state, (value, key) => {
+				if (!(key in mapped)) {
+					this.state = mapped;
+
+					return this.forceUpdateThrottled();
+				}
+			});
+		}
+
+		componentDidMount() {
+			const {
+				store
+			} = this.context;
+
+			this.update();
+			this.unsubscribe = store.subscribe(() => this.update());
+		}
+
+		componentWillUnmount() {
+			this.unsubscribe && this.unsubscribe();
+		}
+
+		render() {
+			return h(Child, assign({}, this.props, this.state))
+		}
+	}
 }
 
 function Provider(props) {
 	this.getChildContext = () => ({
 		store: props.store
 	});
-}
 
-Provider.prototype.render = props => props.children[0];
+	return props.children[0];
+}
 
 module.exports = {
 	connect,
