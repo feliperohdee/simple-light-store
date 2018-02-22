@@ -10,11 +10,12 @@ chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('Events.js', () => {
-	let events, callback, callback2;
+	let events, callback, callback2, callback3;
 
 	beforeEach(() => {
 		callback = sinon.stub();
 		callback2 = sinon.stub();
+		callback3 = sinon.stub();
 		events = new Events();
 	});
 
@@ -195,17 +196,18 @@ describe('Events.js', () => {
 		};
 
 		beforeEach(() => {
-			events.subscribe('event', this, callback);
+			events.subscribe(callback);
 			events.subscribe('event:namespace', this, callback2, true);
+			events.subscribe('event__', this, callback3, true);
 		});
 
 		it('should trigger', () => {
 			events.trigger('event', data);
-			events.trigger('event_', data);
 
 			expect(callback).to.have.been.calledWithExactly('event', data);
 			expect(callback2).to.have.been.calledWithExactly('event', data);
-			expect(events._fns.length).to.equal(1);
+			expect(callback3).not.to.have.been.called;
+			expect(events._fns.length).to.equal(2);
 		});
 	});
 });

@@ -12,7 +12,7 @@
   },
   "scripts": {
     "test": "NODE_ENV=test ./node_modules/.bin/_mocha **.spec.js --recursive --watch",
-    "coverage": "./node_modules/.bin/istanbul cover -x **.spec.js ./node_modules/.bin/_mocha -- '**.spec.js' --recursive",
+    "coverage": "./node_modules/.bin/istanbul cover -x '**.spec.js' ./node_modules/.bin/_mocha -- '**.spec.js' --recursive",
     "deploy": "npm version patch -m 'Bump %s' && git push origin master && npm publish"
   },
   "dependencies": {
