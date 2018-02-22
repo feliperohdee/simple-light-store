@@ -269,6 +269,25 @@ describe('index.js', () => {
 
 				expect(memoryStorage).to.deep.equal({});
 			});
+
+			describe('json error', () => {
+				beforeEach(() => {
+					sinon.stub(console, 'error');
+					sinon.stub(JSON, 'stringify')
+						.throws(new Error('ops'));
+				});
+
+				afterEach(() => {
+					console.error.restore();
+					JSON.stringify.restore();
+				});
+
+				it('should do nothing', () => {
+					store.setPersist('key', 'value');
+
+					expect(memoryStorage).to.deep.equal({});
+				});
+			});
 		});
 
 		describe('getPersist', () => {
@@ -282,6 +301,23 @@ describe('index.js', () => {
 
 			it('should return null', () => {
 				expect(store.getPersist('key_')).to.be.null;
+			});
+
+			describe('json error', () => {
+				beforeEach(() => {
+					sinon.stub(console, 'error');
+					sinon.stub(JSON, 'parse')
+						.throws(new Error('ops'));
+				});
+
+				afterEach(() => {
+					console.error.restore();
+					JSON.parse.restore();
+				});
+
+				it('should return null', () => {
+					expect(store.getPersist('key')).to.be.null;
+				});
 			});
 		});
 
