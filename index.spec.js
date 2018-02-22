@@ -193,6 +193,19 @@ describe('index.js', () => {
 				store.persist.restore();
 			});
 
+			it('should not call persist if action = hydratePersisted', () => {
+				store.storage = {};
+				store.persistKeys = {
+					a: true
+				};
+
+				store.setState({
+					a: 1
+				}, 'store.hydratePersisted');
+
+				expect(store.persist).not.to.have.been.called;
+			});
+
 			it('should not call persist if not persistKeys', () => {
 				store.setState({
 					a: 1
@@ -299,8 +312,8 @@ describe('index.js', () => {
 				expect(store.getPersist('key')).to.equal('value');
 			});
 
-			it('should return null', () => {
-				expect(store.getPersist('key_')).to.be.null;
+			it('should return undefined', () => {
+				expect(store.getPersist('key_')).to.be.undefined;
 			});
 
 			describe('json error', () => {
@@ -315,8 +328,8 @@ describe('index.js', () => {
 					JSON.parse.restore();
 				});
 
-				it('should return null', () => {
-					expect(store.getPersist('key')).to.be.null;
+				it('should return undefined', () => {
+					expect(store.getPersist('key')).to.be.undefined;
 				});
 			});
 		});
@@ -459,7 +472,7 @@ describe('index.js', () => {
 				store.hydratePersisted();
 
 				expect(store.setState).to.have.callCount(5);
-				expect(store.setState).to.have.been.calledWith(sinon.match.object, 'hydratePersisted', true);
+				expect(store.setState).to.have.been.calledWith(sinon.match.object, 'store.hydratePersisted', true);
 			});
 
 			it('should load', () => {
@@ -492,7 +505,7 @@ describe('index.js', () => {
 				});
 			});
 
-			it('should merge existent state', () => {
+			it('should merge with existent state', () => {
 				store.state = {
 					b: {
 						e: {
@@ -516,6 +529,26 @@ describe('index.js', () => {
 					c: [1, 2, 3],
 					d: true,
 					e: null
+				});
+			});
+
+			it('should not merge with existent state', () => {
+				memoryStorage = {};
+				store.state = {
+					b: {
+						e: {
+							a: 5
+						}
+					}
+				};
+
+				store.hydratePersisted();
+				expect(store.getState()).to.deep.equal({
+					b: {
+						e: {
+							a: 5
+						}
+					}
 				});
 			});
 		});

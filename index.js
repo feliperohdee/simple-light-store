@@ -38,7 +38,7 @@ module.exports = class Store extends Events {
 				this.trigger(action, this.state);
 			}
 
-			if (isObjectOnly(this.persistKeys) && this.storage) {
+			if (action !== 'store.hydratePersisted' && isObjectOnly(this.persistKeys) && this.storage) {
 				this.persist(data);
 			}
 		}
@@ -64,11 +64,9 @@ module.exports = class Store extends Events {
 		try {
 			const value = this.storage.getItem(`__p.${key}`);
 
-			return isString(value) ? JSON.parse(value) : null;
+			return isString(value) ? JSON.parse(value) : undefined;
 		} catch (err) {
 			console.error(`can't get persisted ${key}, reason:`, err);
-
-			return null;
 		}
 	}
 
@@ -88,9 +86,11 @@ module.exports = class Store extends Events {
 			if (persist) {
 				const value = this.getPersist(key);
 
-				this.setState({
-					[key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist._ignore)) : value
-				}, 'hydratePersisted', true);
+				if (!isUndefined(value)) {
+					this.setState({
+						[key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist._ignore)) : value
+					}, 'store.hydratePersisted', true);
+				}
 			}
 		});
 	}
