@@ -1,6 +1,7 @@
 const filter = require('lodash/filter');
 const forEach = require('lodash/forEach');
 const isFunction = require('lodash/isFunction');
+const isNull = require('lodash/isNull');
 const isString = require('lodash/isString');
 
 module.exports = class Events {
@@ -55,7 +56,7 @@ module.exports = class Events {
 	}
 
 	unsubscribe(event, context, fn) {
-		if (!isString(event)) {
+		if (!isString(event) && !isNull(event)) {
 			[event, context, fn] = [null, event, context];
 		}
 
@@ -68,7 +69,7 @@ module.exports = class Events {
 		});
 	}
 
-	trigger(event, data) {
+	trigger(event, ...data) {
 		forEach(this._fns, fn => {
 			const canTrigger = fn._event ? (fn._event.replace(/:.*/g, '') === event) : true;
 
@@ -78,9 +79,9 @@ module.exports = class Events {
 				}
 
 				if(fn._async) {
-					setTimeout(() => fn(event, data));
+					setTimeout(() => fn(event, ...data));
 				} else {
-					fn(event, data);
+					fn(event, ...data);
 				}
 			}
 		});

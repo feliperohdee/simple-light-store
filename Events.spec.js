@@ -233,6 +233,26 @@ describe('Events.js', () => {
 
 				expect(events._fns.length).to.equal(1);
 			});
+
+			describe('without shortcut', () => {
+				it('should not unsubscribe by wrong function', () => {
+					events.unsubscribe(null, null, () => null);
+
+					expect(events._fns.length).to.equal(1);
+				});
+
+				it('should not unsubscribe by wrong context', () => {
+					events.unsubscribe(null, {});
+
+					expect(events._fns.length).to.equal(1);
+				});
+
+				it('should not unsubscribe by wrong context and function', () => {
+					events.unsubscribe(null, {}, callback);
+
+					expect(events._fns.length).to.equal(1);
+				});
+			});
 		});
 	});
 

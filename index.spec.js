@@ -186,8 +186,12 @@ describe('index.js', () => {
 			}, 'actionName');
 
 			expect(store.trigger).to.have.been.calledTwice;
-			expect(store.trigger).to.have.been.calledWithExactly('setState', state);
-			expect(store.trigger).to.have.been.calledWithExactly('actionName', state1);
+			expect(store.trigger).to.have.been.calledWithExactly('setState', state, {
+				a: 1
+			});
+			expect(store.trigger).to.have.been.calledWithExactly('actionName', state1, {
+				a: 2
+			});
 		});
 
 		it('should not trigger if silent = true', () => {

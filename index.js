@@ -38,7 +38,7 @@ module.exports = class Store extends Events {
 			this.state = overwrite ? data : assign({}, this.state, data);
 
 			if (!silent) {
-				this.trigger(action, this.state);
+				this.trigger(action, this.state, data);
 			}
 
 			if (action !== 'store.loadPersisted' && isObjectOnly(this.persistKeys) && this.storage) {

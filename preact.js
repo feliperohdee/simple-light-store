@@ -34,7 +34,7 @@ function connect(mapStateToProps) {
 			super(props, context);
 
 			this.state = mapStateToProps(context.store.getState(), props);
-			this.forceUpdateThrottled = throttle(this.forceUpdate.bind(this), 50);
+			this.forceUpdateThrottled = throttle(this.setState.bind(this), 50);
 		}
 
 		update() {
@@ -67,11 +67,16 @@ function connect(mapStateToProps) {
 		}
 
 		componentWillUnmount() {
+			const {
+				store
+			} = this.context;
+
+
 			this.unsubscribe && this.unsubscribe();
 		}
 
-		render() {
-			return h(Child, assign({}, this.props, this.state))
+		render(props, state) {
+			return h(Child, assign({}, props, state));
 		}
 	}
 }
