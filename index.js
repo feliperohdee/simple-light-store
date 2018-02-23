@@ -38,7 +38,7 @@ module.exports = class Store extends Events {
 		}
 	}
 
-	setState(data, overwrite, action = 'setState', silent = false) {
+	set(data, overwrite, action = 'set', silent = false) {
 		if (!isNil(data)) {
 			if (isString(overwrite) || isFunction(overwrite)) {
 				[overwrite, action] = [null, overwrite];
@@ -59,11 +59,11 @@ module.exports = class Store extends Events {
 	}
 
 	get(fn, defaultValue) {
-		return get(fn, defaultValue, this.state);
-	}
+		if(!fn) {
+			return this.state;
+		}
 
-	getState() {
-		return this.state;
+		return get(fn, defaultValue, this.state);
 	}
 
 	setPersist(key, value) {
@@ -119,7 +119,7 @@ module.exports = class Store extends Events {
 				const value = this.getPersist(key);
 
 				if (!isUndefined(value)) {
-					this.setState({
+					this.set({
 						[key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist._ignore)) : value
 					}, 'store.loadPersisted', true);
 				}

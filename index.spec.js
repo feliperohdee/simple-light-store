@@ -98,7 +98,7 @@ describe('index.js', () => {
 		});
 	});
 
-	describe('setState', () => {
+	describe('set', () => {
 		beforeEach(() => {
 			sinon.spy(store, 'trigger');
 		});
@@ -108,7 +108,7 @@ describe('index.js', () => {
 		});
 
 		it('should update state', () => {
-			const state = store.setState({
+			const state = store.set({
 				a: 1
 			});
 
@@ -122,15 +122,15 @@ describe('index.js', () => {
 		});
 
 		it('should replace state', () => {
-			const state = store.setState({
+			const state = store.set({
 				a: 1
 			});
 
-			const state1 = store.setState({
+			const state1 = store.set({
 				b: 2
 			}, true);
 
-			const state2 = store.setState({
+			const state2 = store.set({
 				c: 3
 			}, 'actionName');
 
@@ -150,22 +150,22 @@ describe('index.js', () => {
 		});
 
 		it('should do nothing if is nil', () => {
-			const state = store.setState({
+			const state = store.set({
 				a: 1
 			});
 
-			const state1 = store.setState();
-			const state2 = store.setState(null);
+			const state1 = store.set();
+			const state2 = store.set(null);
 
 			expect(state === state1 && state1 === state2).to.be.true;
 		});
 
 		it('should return new object', () => {
-			const state = store.setState({
+			const state = store.set({
 				a: 1
 			});
 
-			const state1 = store.setState({
+			const state1 = store.set({
 				a: 2
 			});
 
@@ -177,16 +177,16 @@ describe('index.js', () => {
 		});
 
 		it('should trigger', () => {
-			const state = store.setState({
+			const state = store.set({
 				a: 1
 			});
 
-			const state1 = store.setState({
+			const state1 = store.set({
 				a: 2
 			}, 'actionName');
 
 			expect(store.trigger).to.have.been.calledTwice;
-			expect(store.trigger).to.have.been.calledWithExactly('setState', state, {
+			expect(store.trigger).to.have.been.calledWithExactly('set', state, {
 				a: 1
 			});
 			expect(store.trigger).to.have.been.calledWithExactly('actionName', state1, {
@@ -195,7 +195,7 @@ describe('index.js', () => {
 		});
 
 		it('should not trigger if silent = true', () => {
-			store.setState({
+			store.set({
 				a: 1
 			}, false, 'actionName', true);
 
@@ -217,7 +217,7 @@ describe('index.js', () => {
 					a: true
 				};
 
-				store.setState({
+				store.set({
 					a: 1
 				}, 'store.loadPersisted');
 
@@ -225,7 +225,7 @@ describe('index.js', () => {
 			});
 
 			it('should not call persistThrottled if not persistKeys', () => {
-				store.setState({
+				store.set({
 					a: 1
 				});
 
@@ -237,7 +237,7 @@ describe('index.js', () => {
 					a: true
 				};
 
-				store.setState({
+				store.set({
 					a: 1
 				});
 
@@ -250,7 +250,7 @@ describe('index.js', () => {
 					a: true
 				};
 
-				store.setState({
+				store.set({
 					a: 1
 				});
 
@@ -261,9 +261,13 @@ describe('index.js', () => {
 
 	describe('get', () => {
 		beforeEach(() => {
-			 store.setState({
+			 store.set({
 				a: 1
 			});
+		});
+
+		it('should return state', () => {
+			expect(store.get()).to.equal(store.state);
 		});
 
 		it('should return state properties', () => {
@@ -276,16 +280,7 @@ describe('index.js', () => {
 
 		it('should return default value', () => {
 			expect(store.get(state => state.a.b, 'defaultValue')).to.equal('defaultValue');
-		});
-	});
-
-	describe('getState', () => {
-		it('should return state', () => {
-			const state = store.setState({
-				a: 1
-			});
-
-			expect(store.getState()).to.equal(state);
+			expect(store.get(state => state.a.b.c, 'defaultValue')).to.equal('defaultValue');
 		});
 	});
 
@@ -519,7 +514,7 @@ describe('index.js', () => {
 
 		describe('loadPersisted', () => {
 			beforeEach(() => {
-				sinon.spy(store, 'setState');
+				sinon.spy(store, 'set');
 
 				memoryStorage = {
 					'__p.a': '1',
@@ -552,26 +547,26 @@ describe('index.js', () => {
 			});
 
 			afterEach(() => {
-				store.setState.restore();
+				store.set.restore();
 			});
 
 			it('should not load if no persistKeys', () => {
 				store.persistKeys = null;
 				store.loadPersisted();
 
-				expect(store.getState()).to.deep.equal({});
+				expect(store.get()).to.deep.equal({});
 			});
 
-			it('should call setState silently', () => {
+			it('should call set silently', () => {
 				store.loadPersisted();
 
-				expect(store.setState).to.have.callCount(5);
-				expect(store.setState).to.have.been.calledWith(sinon.match.object, 'store.loadPersisted', true);
+				expect(store.set).to.have.callCount(5);
+				expect(store.set).to.have.been.calledWith(sinon.match.object, 'store.loadPersisted', true);
 			});
 
 			it('should load', () => {
 				store.loadPersisted();
-				expect(store.getState()).to.deep.equal({
+				expect(store.get()).to.deep.equal({
 					a: 1,
 					b: {
 						c: 3,
@@ -594,7 +589,7 @@ describe('index.js', () => {
 				};
 
 				store.loadPersisted();
-				expect(store.getState()).to.deep.equal({
+				expect(store.get()).to.deep.equal({
 					a: 1
 				});
 			});
@@ -609,7 +604,7 @@ describe('index.js', () => {
 				};
 
 				store.loadPersisted();
-				expect(store.getState()).to.deep.equal({
+				expect(store.get()).to.deep.equal({
 					a: 1,
 					b: {
 						c: 3,
@@ -637,7 +632,7 @@ describe('index.js', () => {
 				};
 
 				store.loadPersisted();
-				expect(store.getState()).to.deep.equal({
+				expect(store.get()).to.deep.equal({
 					b: {
 						e: {
 							a: 5
