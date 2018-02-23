@@ -1,95 +1,55 @@
-const assign = require('lodash/assign');
 const forEach = require('lodash/forEach');
-const isFunction = require('lodash/isFunction');
-const isString = require('lodash/isString');
+const pick = require('lodash/pick');
 const throttle = require('lodash/throttle');
 const {
 	h,
 	Component
 } = require('preact');
 
-function select(properties = []) {
-	if (isString(properties)) {
-		properties = properties.split(/\s*,\s*/);
-	}
-
-	return state => {
-		let selected = {};
-
-		for (let i = 0; i < properties.length; i++) {
-			selected[properties[i]] = state[properties[i]];
-		}
-
-		return selected;
-	};
-}
-
-function connect(mapStateToProps) {
-	if (!isFunction(mapStateToProps)) {
-		mapStateToProps = select(mapStateToProps);
-	}
-
-	return Child => class extends Component {
+module.exports = function connect(store, updateProps, Child) {
+	return class extends Component {
 		constructor(props, context) {
 			super(props, context);
 
-			this.state = mapStateToProps(context.store.getState(), props);
 			this.forceUpdateThrottled = throttle(this.setState.bind(this), 50);
 		}
 
 		update() {
-			const mapped = mapStateToProps(this.context.store.getState(), this.props);
+			let shouldUpdate = false;
+			
+			const mapped = pick(store.getState(), updateProps);
 
 			forEach(mapped, (value, key) => {
-				if (value !== this.state[key]) {
+				if (!shouldUpdate && value !== this.state[key]) {
 					this.state = mapped;
+					shouldUpdate = true;
 
-					return this.forceUpdateThrottled();
+					this.forceUpdateThrottled();
 				}
 			});
 
-			forEach(this.state, (value, key) => {
-				if (!(key in mapped)) {
-					this.state = mapped;
+			if (!shouldUpdate) {
+				forEach(this.state, (value, key) => {
+					if (!shouldUpdate && !(key in mapped)) {
+						this.state = mapped;
 
-					return this.forceUpdateThrottled();
-				}
-			});
+						this.forceUpdateThrottled();
+					}
+				});
+			}
 		}
 
 		componentDidMount() {
-			const {
-				store
-			} = this.context;
-
 			this.update();
 			this.unsubscribe = store.subscribe(() => this.update());
 		}
 
 		componentWillUnmount() {
-			const {
-				store
-			} = this.context;
-
-
 			this.unsubscribe && this.unsubscribe();
 		}
 
-		render(props, state) {
-			return h(Child, assign({}, props, state));
+		render(props) {
+			return h(Child, props);
 		}
 	}
 }
-
-function Provider(props) {
-	this.getChildContext = () => ({
-		store: props.store
-	});
-
-	return props.children[0];
-}
-
-module.exports = {
-	connect,
-	Provider
-};

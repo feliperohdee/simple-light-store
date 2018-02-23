@@ -13,6 +13,15 @@ const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
 const isObjectOnly = obj => isObject(obj) && !isArray(obj);
+const get = (fn, defaultValue = null, args) => {
+	try {
+		const result = fn(args);
+
+		return result !== undefined && result !== null ? result : defaultValue;
+	} catch (e) {
+		return defaultValue;
+	}
+}
 
 module.exports = class Store extends Events {
 	constructor(state = {}, persistKeys = null, storage = null) {
@@ -47,6 +56,10 @@ module.exports = class Store extends Events {
 		}
 
 		return this.state;
+	}
+
+	get(fn, defaultValue) {
+		return get(fn, defaultValue, this.state);
 	}
 
 	getState() {

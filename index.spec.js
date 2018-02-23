@@ -259,6 +259,26 @@ describe('index.js', () => {
 		});
 	});
 
+	describe('get', () => {
+		beforeEach(() => {
+			 store.setState({
+				a: 1
+			});
+		});
+
+		it('should return state properties', () => {
+			expect(store.get(state => state.a)).to.equal(1);
+		});
+
+		it('should return null', () => {
+			expect(store.get(state => state.a.b)).to.be.null;
+		});
+
+		it('should return default value', () => {
+			expect(store.get(state => state.a.b, 'defaultValue')).to.equal('defaultValue');
+		});
+	});
+
 	describe('getState', () => {
 		it('should return state', () => {
 			const state = store.setState({
