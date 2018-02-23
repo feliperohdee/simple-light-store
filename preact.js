@@ -16,8 +16,8 @@ module.exports = function connect(store, updateProps, Child) {
 
 		update() {
 			let shouldUpdate = false;
-			
-			const mapped = pick(store.getState(), updateProps);
+
+			const mapped = pick(store.state, updateProps);
 
 			forEach(mapped, (value, key) => {
 				if (!shouldUpdate && value !== this.state[key]) {

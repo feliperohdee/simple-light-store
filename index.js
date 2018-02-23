@@ -28,8 +28,8 @@ module.exports = class Store extends Events {
 		super();
 
 		this.persistKeys = persistKeys;
-		this.storage = storage;
 		this.state = state;
+		this.storage = storage;
 		this.persistThrottled = throttle(this.persist.bind(this), 50);
 
 		if (isObjectOnly(this.persistKeys) && storage) {

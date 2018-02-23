@@ -17,7 +17,7 @@ module.exports = function unistoreDevTools(store) {
 				store.setState(JSON.parse(message.state), true);
 			}
 		});
-		store.devtools.init(store.getState());
+		store.devtools.init(store.state);
 		store.subscribe(function (action, state) {
 			var actionName = action ? (action.name || action) : 'setState';
 
