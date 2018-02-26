@@ -262,12 +262,10 @@ describe('index.js', () => {
 	describe('sync', () => {
 		beforeEach(() => {
 			sinon.spy(store, 'set');
-			sinon.spy(store, 'trigger');
 		});
 
 		afterEach(() => {
 			store.set.restore();
-			store.trigger.restore();
 		});
 
 		it('should return unsubscribe', () => {
@@ -278,7 +276,7 @@ describe('index.js', () => {
 			expect(store._fns.length).to.equal(0);
 		});
 
-		it('should sync state', () => {
+		it('should sync', () => {
 			store.sync([{
 				get: (action, changes) => changes.a,
 				set: value => ({
@@ -326,8 +324,34 @@ describe('index.js', () => {
 				}
 			});
 
-			expect(store.trigger).to.have.been.calledWithExactly('sync', store.state, {});
-			expect(store.trigger).to.have.callCount(4);
+			expect(store.set).to.have.been.calledWithExactly(store.state, true, 'sync');
+			expect(store.set).to.have.callCount(4);
+		});
+
+		it('should not sync if nothing changes', () => {
+			store.sync([{
+				get: (action, changes) => changes.a,
+				set: value => ({
+					_a: {
+						a: value
+					}
+				})
+			}]);
+
+			store.set({
+				b: {
+					a: 2
+				}
+			});
+
+			expect(store.state).to.deep.equal({
+				b: {
+					a: 2
+				}
+			});
+
+			expect(store.set).not.to.have.been.calledWithExactly(store.state, true, 'sync');
+			expect(store.set).to.have.been.calledOnce
 		});
 
 		it('should not sync state if no sync.get', () => {
@@ -346,8 +370,20 @@ describe('index.js', () => {
 			expect(store.state).to.deep.equal({
 				a: 1
 			});
+		});
 
-			expect(store.trigger).not.to.have.been.calledWith('sync');
+		it('should not sync state if not sync.set', () => {
+			store.sync([{
+				get: (action, changes) => changes.a
+			}]);
+
+			store.set({
+				a: 1
+			});
+
+			expect(store.state).to.deep.equal({
+				a: 1
+			});
 		});
 
 		it('should not sync state if sync.set not object', () => {
@@ -363,29 +399,30 @@ describe('index.js', () => {
 			expect(store.state).to.deep.equal({
 				a: 1
 			});
-
-			expect(store.trigger).not.to.have.been.calledWith('sync');
 		});
 
-		it('should call set silently', () => {
+		it('should sync if custom set', () => {
+			const set = sinon.stub()
+				.callsFake((data, overwrite, action) => {
+					store.set(data, overwrite, action);
+				});
+
 			store.sync([{
 				get: (action, changes) => changes.a,
 				set: value => ({
 					_a: {
-						a: value
+						a: value.a
 					}
 				})
-			}]);
+			}], set);
 
 			store.set({
-				a: 1
-			});
-
-			expect(store.set).to.have.been.calledWithExactly({
-				_a: {
+				a: {
 					a: 1
 				}
-			}, false, null, true);
+			});
+
+			expect(set).to.have.been.calledWithExactly(store.state, true, 'sync');		
 		});
 	});
 

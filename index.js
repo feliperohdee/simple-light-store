@@ -9,6 +9,7 @@ const isString = require('lodash/isString');
 const isUndefined = require('lodash/isUndefined');
 const merge = require('lodash/merge');
 const omit = require('lodash/omit');
+const reduce = require('lodash/reduce');
 const size = require('lodash/size');
 const throttle = require('lodash/throttle');
 
@@ -50,32 +51,33 @@ module.exports = class Store extends Events {
 		return this.state;
 	}
 
-	sync(filters, actionLabel = 'sync') {
+	sync(filters, setWith = this.set.bind(this)) {
 		return this.subscribe((action, state, changes) => {
-			let synced = false;
+			if(action === 'sync') {
+				return;
+			}
 
-			forEach(filters, ({
+			const newState = reduce(filters, (reduction, {
 				get,
 				set
 			}) => {
-				if (!isFunction(get) || !isFunction(set)) {
-					return;
-				}
+				if (isFunction(get) && isFunction(set)) {
+					const value = get(action, changes);
 
-				const value = get(action, changes);
+					if (!isUndefined(value)) {
+						const data = set(value);
 
-				if(!isUndefined(value)) {
-					const state = set(value);
-					
-					if (isObject(state)) {
-						synced = true;
-						this.set(state, false, null, true);
+						if (isObject(data)) {
+							reduction = assign({}, reduction, data);
+						}
 					}
 				}
-			});
 
-			if (synced) {
-				this.trigger(actionLabel, this.state, {});
+				return reduction;
+			}, this.state);
+
+			if (this.state !== newState) {
+				setWith(newState, true, 'sync');
 			}
 		});
 	}
