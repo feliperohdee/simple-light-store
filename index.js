@@ -1,5 +1,6 @@
 const assign = require('lodash/assign');
 const forEach = require('lodash/forEach');
+const get = require('lodash/get');
 const isArray = require('lodash/isArray');
 const isFunction = require('lodash/isFunction');
 const isNil = require('lodash/isNil');
@@ -13,15 +14,6 @@ const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
 const isObjectOnly = obj => isObject(obj) && !isArray(obj);
-const get = (fn, defaultValue = null, args) => {
-	try {
-		const result = fn(args);
-
-		return result !== undefined && result !== null ? result : defaultValue;
-	} catch (e) {
-		return defaultValue;
-	}
-}
 
 module.exports = class Store extends Events {
 	constructor(state = {}, persistKeys = null, storage = null) {
@@ -58,12 +50,42 @@ module.exports = class Store extends Events {
 		return this.state;
 	}
 
-	get(fn, defaultValue) {
-		if(!fn) {
+	sync(filters, actionLabel = 'sync') {
+		return this.subscribe((action, state, changes) => {
+			let synced = false;
+
+			forEach(filters, ({
+				get,
+				set
+			}) => {
+				if (!isFunction(get) || !isFunction(set)) {
+					return;
+				}
+
+				const value = get(action, changes);
+
+				if(!isUndefined(value)) {
+					const state = set(value);
+					
+					if (isObject(state)) {
+						synced = true;
+						this.set(state, false, null, true);
+					}
+				}
+			});
+
+			if (synced) {
+				this.trigger(actionLabel, this.state, {});
+			}
+		});
+	}
+
+	get(path, defaultValue = null) {
+		if (!path) {
 			return this.state;
 		}
 
-		return get(fn, defaultValue, this.state);
+		return get(this.state, path, defaultValue);
 	}
 
 	setPersist(key, value) {
@@ -107,7 +129,7 @@ module.exports = class Store extends Events {
 
 	cleanFalsyPersistedKeys() {
 		forEach(this.persistKeys, (value, key) => {
-			if(!value) {
+			if (!value) {
 				this.removePersist(key);
 			}
 		});

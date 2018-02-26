@@ -259,9 +259,139 @@ describe('index.js', () => {
 		});
 	});
 
+	describe('sync', () => {
+		beforeEach(() => {
+			sinon.spy(store, 'set');
+			sinon.spy(store, 'trigger');
+		});
+
+		afterEach(() => {
+			store.set.restore();
+			store.trigger.restore();
+		});
+
+		it('should return unsubscribe', () => {
+			const unsubscribe = store.sync();
+
+			expect(store._fns.length).to.equal(1);
+			unsubscribe();
+			expect(store._fns.length).to.equal(0);
+		});
+
+		it('should sync state', () => {
+			store.sync([{
+				get: (action, changes) => changes.a,
+				set: value => ({
+					_a: {
+						a: value
+					}
+				})
+			}, {
+				get: (action, changes) => changes.b && changes.b.a,
+				set: value => ({
+					_b: {
+						a: value
+					}
+				})
+			}]);
+
+			store.set({
+				a: 1
+			});
+
+			expect(store.state).to.deep.equal({
+				a: 1,
+				_a: {
+					a: 1
+				}
+			});
+
+			store.set({
+				a: 2,
+				b: {
+					a: 2
+				}
+			});
+
+			expect(store.state).to.deep.equal({
+				a: 2,
+				_a: {
+					a: 2
+				},
+				b: {
+					a: 2
+				},
+				_b: {
+					a: 2
+				}
+			});
+
+			expect(store.trigger).to.have.been.calledWithExactly('sync', store.state, {});
+			expect(store.trigger).to.have.callCount(4);
+		});
+
+		it('should not sync state if no sync.get', () => {
+			store.sync([{
+				set: value => ({
+					_a: {
+						a: value
+					}
+				})
+			}]);
+
+			store.set({
+				a: 1
+			});
+
+			expect(store.state).to.deep.equal({
+				a: 1
+			});
+
+			expect(store.trigger).not.to.have.been.calledWith('sync');
+		});
+
+		it('should not sync state if sync.set not object', () => {
+			store.sync([{
+				get: (action, changes) => changes.a,
+				set: () => 123
+			}]);
+
+			store.set({
+				a: 1
+			});
+
+			expect(store.state).to.deep.equal({
+				a: 1
+			});
+
+			expect(store.trigger).not.to.have.been.calledWith('sync');
+		});
+
+		it('should call set silently', () => {
+			store.sync([{
+				get: (action, changes) => changes.a,
+				set: value => ({
+					_a: {
+						a: value
+					}
+				})
+			}]);
+
+			store.set({
+				a: 1
+			});
+
+			expect(store.set).to.have.been.calledWithExactly({
+				_a: {
+					a: 1
+				}
+			}, false, null, true);
+		});
+	});
+
 	describe('get', () => {
 		beforeEach(() => {
-			 store.set({
+			store.set({
 				a: 1
 			});
 		});
@@ -271,16 +401,16 @@ describe('index.js', () => {
 		});
 
 		it('should return state properties', () => {
-			expect(store.get(state => state.a)).to.equal(1);
+			expect(store.get('a')).to.equal(1);
 		});
 
 		it('should return null', () => {
-			expect(store.get(state => state.a.b)).to.be.null;
+			expect(store.get('a.b')).to.be.null;
 		});
 
 		it('should return default value', () => {
-			expect(store.get(state => state.a.b, 'defaultValue')).to.equal('defaultValue');
-			expect(store.get(state => state.a.b.c, 'defaultValue')).to.equal('defaultValue');
+			expect(store.get('a.b', 'defaultValue')).to.equal('defaultValue');
+			expect(store.get('a.b.c', 'defaultValue')).to.equal('defaultValue');
 		});
 	});
 
