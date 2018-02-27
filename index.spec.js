@@ -128,7 +128,7 @@ describe('index.js', () => {
 
 			const state1 = store.set({
 				b: 2
-			}, true);
+			}, 'actionName', true);
 
 			const state2 = store.set({
 				c: 3
@@ -197,7 +197,7 @@ describe('index.js', () => {
 		it('should not trigger if silent = true', () => {
 			store.set({
 				a: 1
-			}, false, 'actionName', true);
+			}, 'actionName', false, true);
 
 			expect(store.trigger).not.to.have.been.called;
 		});
@@ -278,38 +278,31 @@ describe('index.js', () => {
 
 		it('should sync', () => {
 			store.sync([{
-				get: (action, changes) => changes.a,
-				set: value => ({
+				filter: (action, state, changes) => changes.a,
+				apply: (action, state, changes) => ({
 					_a: {
-						a: value
+						a: changes.a
 					}
 				})
 			}, {
-				get: (action, changes) => changes.b && changes.b.a,
-				set: value => ({
+				filter: (action, state, changes) => changes.b && changes.b.a,
+				apply: (action, state, changes) => ({
 					_b: {
-						a: value
+						a: changes.b.a
 					}
 				})
 			}]);
 
 			store.set({
 				a: 1
-			});
-
-			expect(store.state).to.deep.equal({
-				a: 1,
-				_a: {
-					a: 1
-				}
-			});
+			}, 'onChange');
 
 			store.set({
 				a: 2,
 				b: {
 					a: 2
 				}
-			});
+			}, 'onChange2');
 
 			expect(store.state).to.deep.equal({
 				a: 2,
@@ -324,16 +317,66 @@ describe('index.js', () => {
 				}
 			});
 
-			expect(store.set).to.have.been.calledWithExactly(store.state, true, 'sync');
+			expect(store.set).to.have.been.calledWithExactly({
+				_a: {
+					a: 1
+				},
+				a: 1
+			}, 'sync.onChange', true, false);
+
+			expect(store.set).to.have.been.calledWithExactly({
+				a: 2,
+				_a: {
+					a: 2
+				},
+				b: {
+					a: 2
+				},
+				_b: {
+					a: 2
+				}
+			}, 'sync.onChange2', true, false);
+
 			expect(store.set).to.have.callCount(4);
+		});
+
+		it('should not sync if from action starts with sync', () => {
+			store.sync([{
+				filter: (action, state, changes) => changes.a,
+				apply: (action, state, changes) => ({
+					_a: {
+						a: changes.a
+					}
+				})
+			}]);
+
+			store.set({
+				a: {
+					a: 1
+				}
+			}, 'sync');
+
+			store.set({
+				a: {
+					a: 1
+				}
+			}, 'sync.onChange');
+
+			expect(store.state).to.deep.equal({
+				a: {
+					a: 1
+				}
+			});
+
+			expect(store.set).to.have.been.calledTwice;
 		});
 
 		it('should not sync if nothing changes', () => {
 			store.sync([{
-				get: (action, changes) => changes.a,
-				set: value => ({
+				filter: (action, state, changes) => changes.a,
+				apply: (action, state, changes) => ({
 					_a: {
-						a: value
+						a: changes.a
 					}
 				})
 			}]);
@@ -342,7 +385,7 @@ describe('index.js', () => {
 				b: {
 					a: 2
 				}
-			});
+			}, 'onChange');
 
 			expect(store.state).to.deep.equal({
 				b: {
@@ -354,75 +397,73 @@ describe('index.js', () => {
 			expect(store.set).to.have.been.calledOnce
 		});
 
-		it('should not sync state if no sync.get', () => {
+		it('should not sync state if no sync.filter', () => {
 			store.sync([{
-				set: value => ({
+				apply: (action, state, changes) => ({
 					_a: {
-						a: value
+						a: changes.a
 					}
 				})
 			}]);
 
 			store.set({
 				a: 1
-			});
+			}, 'onChange');
 
 			expect(store.state).to.deep.equal({
 				a: 1
 			});
 		});
 
-		it('should not sync state if not sync.set', () => {
+		it('should not sync state if not sync.apply', () => {
 			store.sync([{
-				get: (action, changes) => changes.a
+				filter: (action, state, changes) => changes.a
 			}]);
 
 			store.set({
 				a: 1
-			});
+			}, 'onChange');
 
 			expect(store.state).to.deep.equal({
 				a: 1
 			});
 		});
 
-		it('should not sync state if sync.set not object', () => {
+		it('should not sync state if sync.apply not object', () => {
 			store.sync([{
-				get: (action, changes) => changes.a,
-				set: () => 123
+				filter: (action, state, changes) => changes.a,
+				apply: () => 123
 			}]);
 
 			store.set({
 				a: 1
-			});
+			}, 'onChange');
 
 			expect(store.state).to.deep.equal({
 				a: 1
 			});
 		});
 
-		it('should sync if custom set', () => {
-			const set = sinon.stub()
-				.callsFake((data, overwrite, action) => {
-					store.set(data, overwrite, action);
-				});
+		it('should call callback', () => {
+			const callback = sinon.stub();
 
 			store.sync([{
-				get: (action, changes) => changes.a,
-				set: value => ({
+				filter: (action, state, changes) => changes.a,
+				apply: (action, state, changes) => ({
 					_a: {
-						a: value.a
+						a: changes.a.a
 					}
 				})
-			}], set);
+			}], callback);
 
 			store.set({
 				a: {
 					a: 1
 				}
-			});
+			}, 'onChange');
 
-			expect(set).to.have.been.calledWithExactly(store.state, true, 'sync');		
+			expect(callback).to.have.been.calledOnce;
+			expect(callback).to.have.been.calledWithExactly(store.state, 'sync.onChange');
 		});
 	});
 
@@ -438,16 +479,16 @@ describe('index.js', () => {
 		});
 
 		it('should return state properties', () => {
-			expect(store.get('a')).to.equal(1);
+			expect(store.get(s => s.a)).to.equal(1);
 		});
 
 		it('should return null', () => {
-			expect(store.get('a.b')).to.be.null;
+			expect(store.get(s => s.a.b)).to.be.null;
 		});
 
 		it('should return default value', () => {
-			expect(store.get('a.b', 'defaultValue')).to.equal('defaultValue');
-			expect(store.get('a.b.c', 'defaultValue')).to.equal('defaultValue');
+			expect(store.get(s => s.a.b, 'defaultValue')).to.equal('defaultValue');
+			expect(store.get(s => s.a.b.c, 'defaultValue')).to.equal('defaultValue');
 		});
 	});
 
@@ -728,7 +769,7 @@ describe('index.js', () => {
 				store.loadPersisted();
 
 				expect(store.set).to.have.callCount(5);
-				expect(store.set).to.have.been.calledWith(sinon.match.object, 'store.loadPersisted', true);
+				expect(store.set).to.have.been.calledWith(sinon.match.object, 'store.loadPersisted', false, true);
 			});
 
 			it('should load', () => {

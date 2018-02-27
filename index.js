@@ -1,6 +1,4 @@
-const assign = require('lodash/assign');
 const forEach = require('lodash/forEach');
-const get = require('lodash/get');
 const isArray = require('lodash/isArray');
 const isFunction = require('lodash/isFunction');
 const isNil = require('lodash/isNil');
@@ -10,11 +8,21 @@ const isUndefined = require('lodash/isUndefined');
 const merge = require('lodash/merge');
 const omit = require('lodash/omit');
 const reduce = require('lodash/reduce');
+const startsWith = require('lodash/startsWith');
 const size = require('lodash/size');
 const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
 const isObjectOnly = obj => isObject(obj) && !isArray(obj);
+const get = (fn, defaultValue = null, args) => {
+	try {
+		const result = fn(args);
+
+		return result !== undefined && result !== null ? result : defaultValue;
+	} catch (e) {
+		return defaultValue;
+	}
+}
 
 module.exports = class Store extends Events {
 	constructor(state = {}, persistKeys = null, storage = null) {
@@ -31,13 +39,12 @@ module.exports = class Store extends Events {
 		}
 	}
 
-	set(data, overwrite, action = 'set', silent = false) {
+	set(data, action = 'set', overwrite = false, silent = false) {
 		if (!isNil(data)) {
-			if (isString(overwrite) || isFunction(overwrite)) {
-				[overwrite, action] = [null, overwrite];
-			}
-
-			this.state = overwrite ? data : assign({}, this.state, data);
+			this.state = overwrite ? data : {
+				...this.state,
+				...data
+			};
 
 			if (!silent) {
 				this.trigger(action, this.state, data);
@@ -51,24 +58,25 @@ module.exports = class Store extends Events {
 		return this.state;
 	}
 
-	sync(filters, setWith = this.set.bind(this)) {
+	sync(filters, callback) {
 		return this.subscribe((action, state, changes) => {
-			if(action === 'sync') {
+			if(startsWith(action, 'sync')) {
 				return;
 			}
 
 			const newState = reduce(filters, (reduction, {
-				get,
-				set
+				filter,
+				apply
 			}) => {
-				if (isFunction(get) && isFunction(set)) {
-					const value = get(action, changes);
-
-					if (!isUndefined(value)) {
-						const data = set(value);
+				if (isFunction(filter) && isFunction(apply)) {
+					if (filter(action, state, changes)) {
+						const data = apply(action, state, changes);
 
 						if (isObject(data)) {
-							reduction = assign({}, reduction, data);
+							reduction = {
+								...reduction,
+								...data
+							};
 						}
 					}
 				}
@@ -77,17 +85,18 @@ module.exports = class Store extends Events {
 			}, this.state);
 
 			if (this.state !== newState) {
-				setWith(newState, true, 'sync');
+				this.set(newState, `sync.${action}`, true, false);
+				isFunction(callback) && callback(newState, `sync.${action}`);
 			}
 		});
 	}
 
-	get(path, defaultValue = null) {
-		if (!path) {
+	get(fn, defaultValue = null) {
+		if (!fn) {
 			return this.state;
 		}
 
-		return get(this.state, path, defaultValue);
+		return get(fn, defaultValue, this.state);
 	}
 
 	setPersist(key, value) {
@@ -145,7 +154,7 @@ module.exports = class Store extends Events {
 				if (!isUndefined(value)) {
 					this.set({
 						[key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist._ignore)) : value
-					}, 'store.loadPersisted', true);
+					}, 'store.loadPersisted', false, true);
 				}
 			}
 		});
