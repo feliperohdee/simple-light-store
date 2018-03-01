@@ -5,9 +5,7 @@
 		const store = new Store();
 
 		store.set({}, 'actionName');
-		store.get();
-		// safe getter
-		store.get('a.b.c', 'defaultValue');
+		store.get() === store.s;
 		const unsubscribe = store.subscribe(event: string /*optional*/, context: object /*optional*/, callback: function);
 		const unsubscribe = store.subscribeOnce(event: string /*optional*/, context: object /*optional*/, callback: function);
 
