@@ -17,12 +17,12 @@ module.exports = function unistoreDevTools(store) {
 				store.setState(JSON.parse(message.state), true);
 			}
 		});
-		store.devtools.init(store.state);
+		store.devtools.init(store.s);
 		store.subscribe(function (action) {
 			var actionName = action ? (action.name || action) : 'setState';
 
 			if (!ignoreState) {
-				store.devtools.send(actionName, store.state);
+				store.devtools.send(actionName, store.s);
 			} else {
 				ignoreState = false;
 			}

@@ -27,7 +27,7 @@ describe('index.js', () => {
 
 	describe('constructor', () => {
 		it('should start with empty state', () => {
-			expect(store.state).to.deep.equal({});
+			expect(store.s).to.deep.equal({});
 		});
 
 		it('should start with pre state', () => {
@@ -35,7 +35,7 @@ describe('index.js', () => {
 				a: 1
 			});
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: 1
 			});
 		});
@@ -98,6 +98,12 @@ describe('index.js', () => {
 		});
 	});
 
+	describe('get', () => {
+		it('should return state', () => {
+			expect(store.get()).to.equal(store.s);
+		});
+	});
+
 	describe('set', () => {
 		beforeEach(() => {
 			sinon.spy(store, 'trigger');
@@ -116,7 +122,7 @@ describe('index.js', () => {
 				a: 1
 			});
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: 1
 			});
 		});
@@ -143,7 +149,7 @@ describe('index.js', () => {
 				c: 3
 			});
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				b: 2,
 				c: 3
 			});
@@ -170,8 +176,8 @@ describe('index.js', () => {
 			});
 
 			expect(state).not.equal(state1);
-			expect(state1).to.equal(store.state);
-			expect(store.state).to.deep.equal({
+			expect(state1).to.equal(store.s);
+			expect(store.s).to.deep.equal({
 				a: 2
 			});
 		});
@@ -304,7 +310,7 @@ describe('index.js', () => {
 				}
 			}, 'onChange2');
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: 2,
 				_a: {
 					a: 2
@@ -362,7 +368,7 @@ describe('index.js', () => {
 				}
 			}, 'sync.onChange');
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: {
 					a: 1
 				}
@@ -387,13 +393,13 @@ describe('index.js', () => {
 				}
 			}, 'onChange');
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				b: {
 					a: 2
 				}
 			});
 
-			expect(store.set).not.to.have.been.calledWithExactly(store.state, true, 'sync');
+			expect(store.set).not.to.have.been.calledWithExactly(store.s, true, 'sync');
 			expect(store.set).to.have.been.calledOnce
 		});
 
@@ -410,7 +416,7 @@ describe('index.js', () => {
 				a: 1
 			}, 'onChange');
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: 1
 			});
 		});
@@ -424,7 +430,7 @@ describe('index.js', () => {
 				a: 1
 			}, 'onChange');
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: 1
 			});
 		});
@@ -439,7 +445,7 @@ describe('index.js', () => {
 				a: 1
 			}, 'onChange');
 
-			expect(store.state).to.deep.equal({
+			expect(store.s).to.deep.equal({
 				a: 1
 			});
 		});
@@ -463,7 +469,7 @@ describe('index.js', () => {
 			}, 'onChange');
 
 			expect(callback).to.have.been.calledOnce;
-			expect(callback).to.have.been.calledWithExactly(store.state, 'sync.onChange');
+			expect(callback).to.have.been.calledWithExactly(store.s, 'sync.onChange');
 		});
 	});
 
@@ -737,7 +743,7 @@ describe('index.js', () => {
 				store.persistKeys = null;
 				store.loadPersisted();
 
-				expect(store.state).to.deep.equal({});
+				expect(store.s).to.deep.equal({});
 			});
 
 			it('should call set silently', () => {
@@ -749,7 +755,7 @@ describe('index.js', () => {
 
 			it('should load', () => {
 				store.loadPersisted();
-				expect(store.state).to.deep.equal({
+				expect(store.s).to.deep.equal({
 					a: 1,
 					b: {
 						c: 3,
@@ -772,13 +778,13 @@ describe('index.js', () => {
 				};
 
 				store.loadPersisted();
-				expect(store.state).to.deep.equal({
+				expect(store.s).to.deep.equal({
 					a: 1
 				});
 			});
 
 			it('should merge with existent state', () => {
-				store.state = {
+				store.s = {
 					b: {
 						e: {
 							a: 5
@@ -787,7 +793,7 @@ describe('index.js', () => {
 				};
 
 				store.loadPersisted();
-				expect(store.state).to.deep.equal({
+				expect(store.s).to.deep.equal({
 					a: 1,
 					b: {
 						c: 3,
@@ -806,7 +812,7 @@ describe('index.js', () => {
 
 			it('should not merge with existent state', () => {
 				memoryStorage = {};
-				store.state = {
+				store.s = {
 					b: {
 						e: {
 							a: 5
@@ -815,7 +821,7 @@ describe('index.js', () => {
 				};
 
 				store.loadPersisted();
-				expect(store.state).to.deep.equal({
+				expect(store.s).to.deep.equal({
 					b: {
 						e: {
 							a: 5

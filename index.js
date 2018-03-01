@@ -20,7 +20,7 @@ module.exports = class Store extends Events {
 		super();
 
 		this.persistKeys = persistKeys;
-		this.state = state;
+		this.s = state;
 		this.storage = storage;
 		this.persistThrottled = throttle(this.persist.bind(this), 50);
 
@@ -30,10 +30,14 @@ module.exports = class Store extends Events {
 		}
 	}
 
+	get() {
+		return this.s;
+	}
+
 	set(data, action = 'set', overwrite = false, silent = false) {
 		if (!isNil(data)) {
-			this.state = overwrite ? data : {
-				...this.state,
+			this.s = overwrite ? data : {
+				...this.s,
 				...data
 			};
 
@@ -42,11 +46,11 @@ module.exports = class Store extends Events {
 			}
 
 			if (action !== 'store.loadPersisted' && isObjectOnly(this.persistKeys) && this.storage) {
-				this.persistThrottled(this.state);
+				this.persistThrottled(this.s);
 			}
 		}
 
-		return this.state;
+		return this.s;
 	}
 
 	sync(filters, callback) {
@@ -73,9 +77,9 @@ module.exports = class Store extends Events {
 				}
 
 				return reduction;
-			}, this.state);
+			}, this.s);
 
-			if (this.state !== newState) {
+			if (this.s !== newState) {
 				this.set(newState, `sync.${action}`, true, false);
 				isFunction(callback) && callback(newState, `sync.${action}`);
 			}
@@ -136,7 +140,7 @@ module.exports = class Store extends Events {
 
 				if (!isUndefined(value)) {
 					this.set({
-						[key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist._ignore)) : value
+						[key]: isObjectOnly(value) ? merge({}, this.s[key], omit(value, persist._ignore)) : value
 					}, 'store.loadPersisted', false, true);
 				}
 			}
