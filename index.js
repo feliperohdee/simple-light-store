@@ -14,15 +14,6 @@ const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
 const isObjectOnly = obj => isObject(obj) && !isArray(obj);
-const get = (fn, defaultValue = null, args) => {
-	try {
-		const result = fn(args);
-
-		return result !== undefined && result !== null ? result : defaultValue;
-	} catch (e) {
-		return defaultValue;
-	}
-}
 
 module.exports = class Store extends Events {
 	constructor(state = {}, persistKeys = null, storage = null) {
@@ -47,7 +38,7 @@ module.exports = class Store extends Events {
 			};
 
 			if (!silent) {
-				this.trigger(action, this.state, data);
+				this.trigger(action, data);
 			}
 
 			if (action !== 'store.loadPersisted' && isObjectOnly(this.persistKeys) && this.storage) {
@@ -59,7 +50,7 @@ module.exports = class Store extends Events {
 	}
 
 	sync(filters, callback) {
-		return this.subscribe((action, state, changes) => {
+		return this.subscribe((action, changes) => {
 			if(startsWith(action, 'sync')) {
 				return;
 			}
@@ -69,8 +60,8 @@ module.exports = class Store extends Events {
 				apply
 			}) => {
 				if (isFunction(filter) && isFunction(apply)) {
-					if (filter(action, state, changes)) {
-						const data = apply(action, state, changes);
+					if (filter(action, changes)) {
+						const data = apply(action, changes);
 
 						if (isObject(data)) {
 							reduction = {
@@ -89,14 +80,6 @@ module.exports = class Store extends Events {
 				isFunction(callback) && callback(newState, `sync.${action}`);
 			}
 		});
-	}
-
-	get(fn, defaultValue = null) {
-		if (!fn) {
-			return this.state;
-		}
-
-		return get(fn, defaultValue, this.state);
 	}
 
 	setPersist(key, value) {
