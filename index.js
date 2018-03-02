@@ -166,4 +166,19 @@ module.exports = class Store extends Events {
 			}
 		});
 	}
+
+	wrap(fn) {
+		return (...args) => fn(this.state, ...args);
+	}
+
+	wrapAll(fns) {
+		return reduce(
+			fns,
+			(reduction, fn, key) => ({
+				...reduction,
+				[key]: this.wrap(fn)
+			}),
+			{}
+		);
+	}
 };

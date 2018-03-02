@@ -925,4 +925,29 @@ describe('index.js', () => {
 			});
 		});
 	});
+
+	describe('wrap', () => {
+		it('should wrap function with state', () => {
+			const fn = sinon.stub();
+			const wrapped = store.wrap(fn);
+
+			wrapped('a', 'b');
+
+			expect(fn).to.have.been.calledWithExactly(store.state, 'a', 'b');
+		});
+	});
+
+	describe('wrapAll', () => {
+		it('should wrap all functions', () => {
+			const fn = sinon.stub();
+			const fn2 = sinon.stub();
+			const wrapped = store.wrapAll({ fn, fn2 });
+
+			wrapped.fn('a', 'b');
+			wrapped.fn2('c', 'd');
+
+			expect(fn).to.have.been.calledWithExactly(store.state, 'a', 'b');
+			expect(fn2).to.have.been.calledWithExactly(store.state, 'c', 'd');
+		});
+	});
 });
