@@ -11,18 +11,20 @@ module.exports = function unistoreDevTools(store) {
 
 	if (!store.devtools) {
 		store.devtools = extension.connect();
-		store.devtools.subscribe(function (message) {
+		store.devtools.subscribe(function(message) {
 			if (message.type === 'DISPATCH' && message.state) {
-				ignoreState = (message.payload.type === 'JUMP_TO_ACTION' || message.payload.type === 'JUMP_TO_STATE');
-				store.setState(JSON.parse(message.state), true);
+				ignoreState =
+					message.payload.type === 'JUMP_TO_ACTION' ||
+					message.payload.type === 'JUMP_TO_STATE';
+				store.state(JSON.parse(message.state), true);
 			}
 		});
-		store.devtools.init(store.s);
-		store.subscribe(function (action) {
-			var actionName = action ? (action.name || action) : 'setState';
+		store.devtools.init(store.state);
+		store.subscribe(function(action) {
+			var actionName = action ? action.name || action : 'setState';
 
 			if (!ignoreState) {
-				store.devtools.send(actionName, store.s);
+				store.devtools.send(actionName, store.state);
 			} else {
 				ignoreState = false;
 			}
@@ -30,4 +32,4 @@ module.exports = function unistoreDevTools(store) {
 	}
 
 	return store;
-}
+};

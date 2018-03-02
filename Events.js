@@ -5,7 +5,7 @@ const isNull = require('lodash/isNull');
 const isString = require('lodash/isString');
 
 module.exports = class Events {
-	constructor() {		
+	constructor() {
 		this._fns = [];
 	}
 
@@ -65,20 +65,26 @@ module.exports = class Events {
 		}
 
 		this._fns = filter(this._fns, _fn => {
-			return (event ? _fn._event !== event : false) || (context ? _fn._context !== context : false) || (fn ? _fn !== fn : false);
+			return (
+				(event ? _fn._event !== event : false) ||
+				(context ? _fn._context !== context : false) ||
+				(fn ? _fn !== fn : false)
+			);
 		});
 	}
 
 	trigger(event, ...data) {
 		forEach(this._fns, fn => {
-			const canTrigger = fn._event ? (fn._event.replace(/:.*/g, '') === event) : true;
+			const canTrigger = fn._event
+				? fn._event.replace(/:.*/g, '') === event
+				: true;
 
 			if (canTrigger) {
 				if (fn._once) {
 					this.unsubscribe(fn._event, fn._context, fn);
 				}
 
-				if(fn._async) {
+				if (fn._async) {
 					setTimeout(() => fn(event, ...data));
 				} else {
 					fn(event, ...data);
@@ -86,4 +92,4 @@ module.exports = class Events {
 			}
 		});
 	}
-}
+};

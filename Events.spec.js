@@ -48,7 +48,11 @@ describe('Events.js', () => {
 			unsubscribe();
 
 			expect(unsubscribe).to.be.a('function');
-			expect(events.unsubscribe).to.have.been.calledWithExactly(null, null, callback);
+			expect(events.unsubscribe).to.have.been.calledWithExactly(
+				null,
+				null,
+				callback
+			);
 		});
 
 		it('should subscribe by function', () => {
@@ -114,7 +118,13 @@ describe('Events.js', () => {
 		it('should call subscribe', () => {
 			events.subscribeAsync('event', this, callback);
 
-			expect(events.subscribe).to.have.been.calledWithExactly('event', this, callback, false, true);
+			expect(events.subscribe).to.have.been.calledWithExactly(
+				'event',
+				this,
+				callback,
+				false,
+				true
+			);
 		});
 	});
 
@@ -130,7 +140,12 @@ describe('Events.js', () => {
 		it('should call subscribe', () => {
 			events.subscribeOnce('event', this, callback);
 
-			expect(events.subscribe).to.have.been.calledWithExactly('event', this, callback, true);
+			expect(events.subscribe).to.have.been.calledWithExactly(
+				'event',
+				this,
+				callback,
+				true
+			);
 		});
 	});
 
@@ -146,7 +161,13 @@ describe('Events.js', () => {
 		it('should call subscribe', () => {
 			events.subscribeOnceAsync('event', this, callback);
 
-			expect(events.subscribe).to.have.been.calledWithExactly('event', this, callback, true, true);
+			expect(events.subscribe).to.have.been.calledWithExactly(
+				'event',
+				this,
+				callback,
+				true,
+				true
+			);
 		});
 	});
 
