@@ -75,9 +75,9 @@ module.exports = class Events {
 
 	trigger(event, ...data) {
 		forEach(this._fns, fn => {
-			const canTrigger = fn._event
-				? fn._event.replace(/:.*/g, '') === event
-				: true;
+			const canTrigger = fn._event ?
+				fn._event.replace(/:.*/g, '') === event :
+				true;
 
 			if (canTrigger) {
 				if (fn._once) {

@@ -81,12 +81,9 @@ describe('index.js', () => {
 			});
 
 			it('should not call cleanFalsyPersistedKeys and loadPersisted if persistKeys and not storage', () => {
-				store = new Store(
-					{},
-					{
-						a: true
-					}
-				);
+				store = new Store({}, {
+					a: true
+				});
 
 				expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been
 					.called;
@@ -94,13 +91,9 @@ describe('index.js', () => {
 			});
 
 			it('should call cleanFalsyPersistedKeys and loadPersisted if persistKeys and storage', () => {
-				store = new Store(
-					{},
-					{
-						a: true
-					},
-					{}
-				);
+				store = new Store({}, {
+					a: true
+				}, {});
 
 				expect(Store.prototype.cleanFalsyPersistedKeys).to.have.been
 					.called;
@@ -143,16 +136,14 @@ describe('index.js', () => {
 				a: 1
 			});
 
-			const state1 = store.set(
-				{
+			const state1 = store.set({
 					b: 2
 				},
 				'actionName',
 				true
 			);
 
-			const state2 = store.set(
-				{
+			const state2 = store.set({
 					c: 3
 				},
 				'actionName'
@@ -205,8 +196,7 @@ describe('index.js', () => {
 				a: 1
 			});
 
-			const state1 = store.set(
-				{
+			const state1 = store.set({
 					b: 2
 				},
 				'actionName'
@@ -222,8 +212,7 @@ describe('index.js', () => {
 		});
 
 		it('should not trigger if silent = true', () => {
-			store.set(
-				{
+			store.set({
 					a: 1
 				},
 				'actionName',
@@ -249,8 +238,7 @@ describe('index.js', () => {
 					a: true
 				};
 
-				store.set(
-					{
+				store.set({
 						a: 1
 					},
 					'store.loadPersisted'
@@ -312,34 +300,29 @@ describe('index.js', () => {
 		});
 
 		it('should sync', () => {
-			store.sync([
-				{
-					filter: (action, changes) => changes.a,
-					apply: (action, changes) => ({
-						_a: {
-							a: changes.a
-						}
-					})
-				},
-				{
-					filter: (action, changes) => changes.b && changes.b.a,
-					apply: (action, changes) => ({
-						_b: {
-							a: changes.b.a
-						}
-					})
-				}
-			]);
+			store.sync([{
+				filter: (action, changes) => changes.a,
+				apply: (action, changes) => ({
+					_a: {
+						a: changes.a
+					}
+				})
+			}, {
+				filter: (action, changes) => changes.b && changes.b.a,
+				apply: (action, changes) => ({
+					_b: {
+						a: changes.b.a
+					}
+				})
+			}]);
 
-			store.set(
-				{
+			store.set({
 					a: 1
 				},
 				'onChange'
 			);
 
-			store.set(
-				{
+			store.set({
 					a: 2,
 					b: {
 						a: 2
@@ -361,8 +344,7 @@ describe('index.js', () => {
 				}
 			});
 
-			expect(store.set).to.have.been.calledWithExactly(
-				{
+			expect(store.set).to.have.been.calledWithExactly({
 					_a: {
 						a: 1
 					},
@@ -373,8 +355,7 @@ describe('index.js', () => {
 				false
 			);
 
-			expect(store.set).to.have.been.calledWithExactly(
-				{
+			expect(store.set).to.have.been.calledWithExactly({
 					a: 2,
 					_a: {
 						a: 2
@@ -395,19 +376,16 @@ describe('index.js', () => {
 		});
 
 		it('should not sync if from action starts with sync', () => {
-			store.sync([
-				{
-					filter: (action, changes) => changes.a,
-					apply: (action, changes) => ({
-						_a: {
-							a: changes.a
-						}
-					})
-				}
-			]);
+			store.sync([{
+				filter: (action, changes) => changes.a,
+				apply: (action, changes) => ({
+					_a: {
+						a: changes.a
+					}
+				})
+			}]);
 
-			store.set(
-				{
+			store.set({
 					a: {
 						a: 1
 					}
@@ -415,8 +393,7 @@ describe('index.js', () => {
 				'sync'
 			);
 
-			store.set(
-				{
+			store.set({
 					a: {
 						a: 1
 					}
@@ -434,19 +411,16 @@ describe('index.js', () => {
 		});
 
 		it('should not sync if nothing changes', () => {
-			store.sync([
-				{
-					filter: (action, changes) => changes.a,
-					apply: (action, changes) => ({
-						_a: {
-							a: changes.a
-						}
-					})
-				}
-			]);
+			store.sync([{
+				filter: (action, changes) => changes.a,
+				apply: (action, changes) => ({
+					_a: {
+						a: changes.a
+					}
+				})
+			}]);
 
-			store.set(
-				{
+			store.set({
 					b: {
 						a: 2
 					}
@@ -469,18 +443,15 @@ describe('index.js', () => {
 		});
 
 		it('should not sync state if no sync.filter', () => {
-			store.sync([
-				{
-					apply: (action, changes) => ({
-						_a: {
-							a: changes.a
-						}
-					})
-				}
-			]);
+			store.sync([{
+				apply: (action, changes) => ({
+					_a: {
+						a: changes.a
+					}
+				})
+			}]);
 
-			store.set(
-				{
+			store.set({
 					a: 1
 				},
 				'onChange'
@@ -492,14 +463,11 @@ describe('index.js', () => {
 		});
 
 		it('should not sync state if not sync.apply', () => {
-			store.sync([
-				{
-					filter: (action, changes) => changes.a
-				}
-			]);
+			store.sync([{
+				filter: (action, changes) => changes.a
+			}]);
 
-			store.set(
-				{
+			store.set({
 					a: 1
 				},
 				'onChange'
@@ -511,15 +479,12 @@ describe('index.js', () => {
 		});
 
 		it('should not sync state if sync.apply not object', () => {
-			store.sync([
-				{
-					filter: (action, changes) => changes.a,
-					apply: () => 123
-				}
-			]);
+			store.sync([{
+				filter: (action, changes) => changes.a,
+				apply: () => 123
+			}]);
 
-			store.set(
-				{
+			store.set({
 					a: 1
 				},
 				'onChange'
@@ -534,21 +499,18 @@ describe('index.js', () => {
 			const callback = sinon.stub();
 
 			store.sync(
-				[
-					{
-						filter: (action, changes) => changes.a,
-						apply: (action, changes) => ({
-							_a: {
-								a: changes.a.a
-							}
-						})
-					}
-				],
+				[{
+					filter: (action, changes) => changes.a,
+					apply: (action, changes) => ({
+						_a: {
+							a: changes.a.a
+						}
+					})
+				}],
 				callback
 			);
 
-			store.set(
-				{
+			store.set({
 					a: {
 						a: 1
 					}
@@ -941,7 +903,10 @@ describe('index.js', () => {
 		it('should wrap all functions', () => {
 			const fn = sinon.stub();
 			const fn2 = sinon.stub();
-			const wrapped = store.wrapAll({ fn, fn2 });
+			const wrapped = store.wrapAll({
+				fn,
+				fn2
+			});
 
 			wrapped.fn('a', 'b');
 			wrapped.fn2('c', 'd');

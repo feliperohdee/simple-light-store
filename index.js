@@ -36,12 +36,10 @@ module.exports = class Store extends Events {
 
 	set(data, action = 'set', overwrite = false, silent = false) {
 		if (!isNil(data)) {
-			this.state = overwrite
-				? data
-				: {
-						...this.state,
-						...data
-				  };
+			this.state = overwrite ? data : {
+				...this.state,
+				...data
+			};
 
 			if (!silent) {
 				this.trigger(action, data);
@@ -67,7 +65,10 @@ module.exports = class Store extends Events {
 
 			const newState = reduce(
 				filters,
-				(reduction, { filter, apply }) => {
+				(reduction, {
+					filter,
+					apply
+				}) => {
 					if (isFunction(filter) && isFunction(apply)) {
 						if (filter(action, changes)) {
 							const data = apply(action, changes);
@@ -126,9 +127,9 @@ module.exports = class Store extends Events {
 			const persist = this.persistKeys && this.persistKeys[key];
 
 			if (persist) {
-				value = isObjectOnly(value)
-					? omit(value, persist._ignore)
-					: value;
+				value = isObjectOnly(value) ?
+					omit(value, persist._ignore) :
+					value;
 				this.setPersist(key, value);
 			}
 		});
@@ -148,20 +149,13 @@ module.exports = class Store extends Events {
 				const value = this.getPersist(key);
 
 				if (!isUndefined(value)) {
-					this.set(
-						{
-							[key]: isObjectOnly(value)
-								? merge(
-										{},
-										this.state[key],
-										omit(value, persist._ignore)
-								  )
-								: value
-						},
-						'store.loadPersisted',
-						false,
-						true
-					);
+					this.set({
+						[key]: isObjectOnly(value) ?
+							merge({},
+								this.state[key],
+								omit(value, persist._ignore)
+							) : value
+					}, 'store.loadPersisted', false, true);
 				}
 			}
 		});
@@ -177,8 +171,7 @@ module.exports = class Store extends Events {
 			(reduction, fn, key) => ({
 				...reduction,
 				[key]: this.wrap(fn)
-			}),
-			{}
+			}), {}
 		);
 	}
 };

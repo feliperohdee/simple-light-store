@@ -16,7 +16,7 @@ module.exports = function unistoreDevTools(store) {
 				ignoreState =
 					message.payload.type === 'JUMP_TO_ACTION' ||
 					message.payload.type === 'JUMP_TO_STATE';
-				store.state(JSON.parse(message.state), true);
+				store.set(JSON.parse(message.state), true);
 			}
 		});
 		store.devtools.init(store.state);
