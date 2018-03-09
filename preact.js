@@ -1,4 +1,5 @@
 const forEach = require('lodash/forEach');
+const isFunction = require('lodash/isFunction');
 const pick = require('lodash/pick');
 const throttle = require('lodash/throttle');
 const {
@@ -6,18 +7,57 @@ const {
 	Component
 } = require('preact');
 
-module.exports = function connect(store, updateProps, Child) {
+module.exports = function connect({
+	component,
+	componentDidMount,
+	componentWillMount,
+	componentWillUnmount,
+	store,
+	updateProps
+}) {
 	return class extends Component {
-		constructor(props, context) {
-			super(props, context);
-
+		componentWillMount() {
 			this.forceUpdateThrottled = throttle(this.setState.bind(this), 50);
+
+			if (isFunction(componentWillMount)) {
+				this.willMountArgs = componentWillMount(this.props);
+			}
+		}
+
+		componentDidMount() {
+			const _store = this.willMountArgs && this.willMountArgs.store || store;
+
+			this.update();
+			this.unsubscribe = _store.subscribe(() => this.update());
+
+			if (isFunction(componentDidMount)) {
+				componentDidMount({
+					...this.props,
+					...this.willMountArgs
+				});
+			}
+		}
+
+		componentWillUnmount() {
+			this.unsubscribe && this.unsubscribe();
+
+			if (isFunction(componentWillUnmount)) {
+				componentWillUnmount({
+					...this.props,
+					...this.willMountArgs
+				});
+			}
 		}
 
 		update() {
-			let shouldUpdate = false;
+			if (!updateProps) {
+				return this.forceUpdateThrottled();
+			}
 
-			const mapped = pick(store.state, updateProps);
+			let shouldUpdate = false;
+			
+			const _store = this.willMountArgs && this.willMountArgs.store || store;
+			const mapped = pick(_store.state, updateProps);
 
 			forEach(mapped, (value, key) => {
 				if (!shouldUpdate && value !== this.state[key]) {
@@ -39,17 +79,8 @@ module.exports = function connect(store, updateProps, Child) {
 			}
 		}
 
-		componentDidMount() {
-			this.update();
-			this.unsubscribe = store.subscribe(() => this.update());
-		}
-
-		componentWillUnmount() {
-			this.unsubscribe && this.unsubscribe();
-		}
-
 		render(props) {
-			return h(Child, props);
+			return h(this.willMountArgs && this.willMountArgs.component || component, props);
 		}
 	}
 }

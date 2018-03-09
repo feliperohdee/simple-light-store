@@ -127,9 +127,7 @@ module.exports = class Store extends Events {
 			const persist = this.persistKeys && this.persistKeys[key];
 
 			if (persist) {
-				value = isObjectOnly(value) ?
-					omit(value, persist._ignore) :
-					value;
+				value = isObjectOnly(value) ? omit(value, persist.ignore) : value;
 				this.setPersist(key, value);
 			}
 		});
@@ -153,7 +151,7 @@ module.exports = class Store extends Events {
 						[key]: isObjectOnly(value) ?
 							merge({},
 								this.state[key],
-								omit(value, persist._ignore)
+								omit(value, persist.ignore)
 							) : value
 					}, 'store.loadPersisted', false, true);
 				}

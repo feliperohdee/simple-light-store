@@ -734,7 +734,7 @@ describe('index.js', () => {
 			it('should ignore inner keys', () => {
 				store.persistKeys = {
 					b: {
-						_ignore: ['a', 'b', 'e.a', 'e.b']
+						ignore: ['a', 'b', 'e.a', 'e.b']
 					}
 				};
 
@@ -778,7 +778,7 @@ describe('index.js', () => {
 				store.persistKeys = {
 					a: true,
 					b: {
-						_ignore: ['a', 'b', 'e.a', 'e.b']
+						ignore: ['a', 'b', 'e.a', 'e.b']
 					},
 					c: true,
 					d: true,
