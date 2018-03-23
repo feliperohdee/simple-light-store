@@ -9,7 +9,6 @@ const merge = require('lodash/merge');
 const omit = require('lodash/omit');
 const reduce = require('lodash/reduce');
 const startsWith = require('lodash/startsWith');
-const size = require('lodash/size');
 const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
@@ -149,10 +148,7 @@ module.exports = class Store extends Events {
 				if (!isUndefined(value)) {
 					this.set({
 						[key]: isObjectOnly(value) ?
-							merge({},
-								this.state[key],
-								omit(value, persist.ignore)
-							) : value
+							merge({}, this.state[key], omit(value, persist.ignore)) : value
 					}, 'store.loadPersisted', false, true);
 				}
 			}
