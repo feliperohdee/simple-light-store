@@ -3,9 +3,9 @@ const isFunction = require('lodash/isFunction');
 const pick = require('lodash/pick');
 const throttle = require('lodash/throttle');
 const {
-	h,
+	createElement,
 	Component
-} = require('preact');
+} = require('react');
 
 module.exports = function connect({
 	component,
@@ -81,8 +81,8 @@ module.exports = function connect({
 			}
 		}
 
-		render(props) {
-			return h((this.willMountArgs && this.willMountArgs.component) || component, props);
+		render() {
+			return createElement((this.willMountArgs && this.willMountArgs.component) || component, this.props);
 		}
 	};
 };
