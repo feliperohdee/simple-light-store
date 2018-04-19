@@ -1,5 +1,4 @@
 const filter = require('lodash/filter');
-const forEach = require('lodash/forEach');
 const isFunction = require('lodash/isFunction');
 const isNull = require('lodash/isNull');
 const isString = require('lodash/isString');
@@ -17,12 +16,13 @@ module.exports = class Events {
 		if (!isString(event)) {
 			[event, context, fn] = [null, event, context];
 		}
-
+		
 		if (isFunction(context)) {
 			[context, fn] = [null, context];
 		}
-
+		
 		if (event) {
+			fn._hasNamespace = event.indexOf(':') >= 0;
 			fn._event = event;
 		}
 
@@ -74,20 +74,23 @@ module.exports = class Events {
 	}
 
 	trigger(event, ...data) {
-		forEach(this._fns, fn => {
-			const canTrigger = fn._event ? fn._event.replace(/:.*/g, '') === event : true;
+		const fns = this._fns;
+
+		for (let i = 0; i < fns.length; i++) {
+			const _event = fns[i]._hasNamespace ? fns[i]._event.replace(/:.*/g, '') : fns[i]._event;
+			const canTrigger = _event ? _event === event : true;
 
 			if (canTrigger) {
-				if (fn._once) {
-					this.unsubscribe(fn._event, fn._context, fn);
+				if (fns[i]._once) {
+					this.unsubscribe(fns[i]._event, fns[i]._context, fns[i]);
 				}
 
-				if (fn._async) {
-					setTimeout(() => fn(event, ...data));
+				if (fns[i]._async) {
+					setTimeout(() => fns[i](event, ...data));
 				} else {
-					fn(event, ...data);
+					fns[i](event, ...data);
 				}
 			}
-		});
+		}
 	}
 };
