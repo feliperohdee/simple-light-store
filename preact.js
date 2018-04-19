@@ -1,5 +1,6 @@
 const forEach = require('lodash/forEach');
 const isFunction = require('lodash/isFunction');
+const isNumber = require('lodash/isNumber');
 const pick = require('lodash/pick');
 const lodashThrottle = require('lodash/throttle');
 const {
