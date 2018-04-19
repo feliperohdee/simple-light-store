@@ -1,7 +1,8 @@
 const forEach = require('lodash/forEach');
 const isFunction = require('lodash/isFunction');
+const isNumber = require('lodash/isNumber');
 const pick = require('lodash/pick');
-const throttle = require('lodash/throttle');
+const lodashThrottle = require('lodash/throttle');
 const {
 	createElement,
 	Component
@@ -13,13 +14,14 @@ module.exports = function connect({
 	componentWillMount,
 	componentWillUnmount,
 	store,
-	updateProps
+	updateProps,
+	throttle = false
 }) {
 	return class extends Component {
 		state = {};
 		
 		componentWillMount() {
-			this.forceUpdateThrottled = throttle(this.forceUpdate.bind(this), 50);
+			this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
 
 			if (isFunction(componentWillMount)) {
 				this.willMountArgs = componentWillMount(this.props);
@@ -53,7 +55,7 @@ module.exports = function connect({
 
 		update() {
 			if (!updateProps) {
-				return this.forceUpdateThrottled();
+				return this.updateComponent();
 			}
 
 			let shouldUpdate = false;
@@ -66,7 +68,7 @@ module.exports = function connect({
 					this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
 					shouldUpdate = true;
 
-					this.forceUpdateThrottled();
+					this.updateComponent();
 				}
 			});
 
@@ -75,7 +77,7 @@ module.exports = function connect({
 					if (!shouldUpdate && !(key in mapped)) {
 						this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
 
-						this.forceUpdateThrottled();
+						this.updateComponent();
 					}
 				});
 			}
