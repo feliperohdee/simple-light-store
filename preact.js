@@ -4,87 +4,93 @@ const isNumber = require('lodash/isNumber');
 const pick = require('lodash/pick');
 const lodashThrottle = require('lodash/throttle');
 const {
-	h,
-	Component
+    h,
+    Component
 } = require('preact');
 
 module.exports = function connect({
-	component,
-	componentDidMount,
-	componentWillMount,
-	componentWillUnmount,
-	store,
-	updateProps,
-	throttle = false
+    component,
+    componentDidMount,
+    componentWillMount,
+    componentWillUnmount,
+    store,
+    updateProps,
+    throttle = false
 }) {
-	return class extends Component {
-		state = {};
-		
-		componentWillMount() {
-			this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
+    return class extends Component {
+        state = {};
 
-			if (isFunction(componentWillMount)) {
-				this.willMountArgs = componentWillMount(this.props);
-			}
-		}
+        componentWillMount() {
+            this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
 
-		componentDidMount() {
-			const _store = (this.willMountArgs && this.willMountArgs.store) || store;
+            if (isFunction(componentWillMount)) {
+                this.willMountArgs = componentWillMount(this.props);
+            }
+        }
 
-			this.update();
-			this.unsubscribe = _store.subscribe(() => this.update());
+        componentDidMount() {
+            const _store = (this.willMountArgs && this.willMountArgs.store) || store;
 
-			if (isFunction(componentDidMount)) {
-				componentDidMount({
-					...this.props,
-					...this.willMountArgs
-				});
-			}
-		}
+            this.update();
+            this.unsubscribe = _store.subscribe(() => this.update());
 
-		componentWillUnmount() {
-			this.unsubscribe && this.unsubscribe();
+            if (isFunction(componentDidMount)) {
+                componentDidMount({
+                    ...this.props,
+                    ...this.willMountArgs
+                });
+            }
+        }
 
-			if (isFunction(componentWillUnmount)) {
-				componentWillUnmount({
-					...this.props,
-					...this.willMountArgs
-				});
-			}
-		}
+        componentWillUnmount() {
+            this.unsubscribe && this.unsubscribe();
 
-		update() {
-			if (!updateProps) {
-				return this.updateComponent();
-			}
+            if (isFunction(componentWillUnmount)) {
+                componentWillUnmount({
+                    ...this.props,
+                    ...this.willMountArgs
+                });
+            }
+        }
 
-			let shouldUpdate = false;
-			
-			const _store = (this.willMountArgs && this.willMountArgs.store) || store;
-			const mapped = pick(_store.state, updateProps);
+        update() {
+            if (!updateProps) {
+                return this.updateComponent();
+            }
 
-			forEach(mapped, (value, key) => {
-				if (!shouldUpdate && value !== this.state[key]) {
-					this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
-					shouldUpdate = true;
+            let shouldUpdate = false;
 
-					this.updateComponent();
-				}
-			});
+            const _store = (this.willMountArgs && this.willMountArgs.store) || store;
+            const mapped = pick(_store.state, updateProps);
 
-			if (!shouldUpdate) {
-				forEach(this.state, (value, key) => {
-					if (!shouldUpdate && !(key in mapped)) {
-						this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
+            forEach(mapped, (value, key) => {
+                if (!shouldUpdate && value !== this.state[key]) {
+                    this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
+                    shouldUpdate = true;
 
-						this.updateComponent();
-					}
-				});
-			}
-		}
+                    this.updateComponent();
+                }
+            });
 
-		render(props) {
-			return h((this.willMountArgs && this.willMountArgs.component) || component, props);
-		}
-	};
+            if (!shouldUpdate) {
+                forEach(this.state, (value, key) => {
+                    if (!shouldUpdate && !(key in mapped)) {
+                        this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
+
+                        this.updateComponent();
+                    }
+                });
+            }
+        }
+
+        render(props) {
+            return h((this.willMountArgs && this.willMountArgs.component) || component, this.willMountArgs ? {
+                ...props,
+                _state: this.willMountArgs.store.state
+            } : {
+                ...props,
+                _state: store.state
+            });
+        }
+    };
 };

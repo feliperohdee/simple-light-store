@@ -84,7 +84,13 @@ module.exports = function connect({
 		}
 
 		render() {
-			return createElement((this.willMountArgs && this.willMountArgs.component) || component, this.props);
+			return createElement((this.willMountArgs && this.willMountArgs.component) || component, this.willMountArgs ? {
+				...this.props,
+				_state: this.willMountArgs.store.state
+			} : {
+				...this.props,
+				_state: store.state
+			});
 		}
 	};
 };
