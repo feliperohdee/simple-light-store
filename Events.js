@@ -76,6 +76,10 @@ module.exports = class Events {
 	trigger(event, ...data) {
 		const fns = this._fns;
 
+		if(!fns) {
+			return;
+		}
+
 		for (let i = 0; i < fns.length; i++) {
 			const _event = fns[i]._hasNamespace ? fns[i]._event.replace(/:.*/g, '') : fns[i]._event;
 			const canTrigger = _event ? _event === event : true;
