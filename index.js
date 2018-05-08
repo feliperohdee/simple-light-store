@@ -20,13 +20,14 @@ function assign(obj, props) {
 }
 
 module.exports = class Store extends Events {
-    constructor(state = {}, persistKeys = null, storage = null) {
+    constructor(state = {}, persistKeys = null, storage = null, hooks = {}) {
         super();
 
         this.persistKeys = persistKeys;
         this.state = state;
         this.storage = storage;
         this.persistThrottled = throttle(this.persist.bind(this), 50);
+        this.hooks = hooks;
 
         if (isObjectOnly(this.persistKeys) && storage) {
             this.loadPersisted();
@@ -98,7 +99,13 @@ module.exports = class Store extends Events {
     setPersist(key, value) {
         try {
             if (!isUndefined(value)) {
-                this.storage.setItem(`__p.${key}`, JSON.stringify(value));
+                value = JSON.stringify(value);
+
+                if(isFunction(this.hooks.setPersist)) {
+                    value = this.hooks.setPersist(value);
+                }
+
+                this.storage.setItem(`__p.${key}`, value);
             }
         } catch (err) {
             console.error(`can't persist ${key}, reason:`, err);
@@ -107,9 +114,15 @@ module.exports = class Store extends Events {
 
     getPersist(key) {
         try {
-            const value = this.storage.getItem(`__p.${key}`);
+            let value = this.storage.getItem(`__p.${key}`);
 
-            return isString(value) ? JSON.parse(value) : undefined;
+            value = isString(value) ? JSON.parse(value) : undefined;
+
+            if(isFunction(this.hooks.getPersist)) {
+                return this.hooks.getPersist(value);
+            }
+
+            return value;
         } catch (err) {
             console.error(`can't get persisted ${key}, reason:`, err);
         }
