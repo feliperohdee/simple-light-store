@@ -141,6 +141,10 @@ module.exports = class Store extends Events {
             const persist = this.persistKeys && this.persistKeys[key];
 
             if (persist) {
+                if(isFunction(this.hooks.persist)) {
+                    value = this.hooks.persist(value);
+                }
+
                 value = isObjectOnly(value) ? omit(value, persist.ignore) : value;
                 this.setPersist(key, value);
             }

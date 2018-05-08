@@ -601,6 +601,7 @@ describe('index.js', () => {
                 it('should persist hooked data', () => {
                     store.setPersist('key', 'value');
 
+                    expect(store.hooks.setPersist).to.have.been.calledWithExactly('"value"');
                     expect(memoryStorage).to.deep.equal({
                         '__p.key': 'hooked'
                     });
@@ -651,6 +652,7 @@ describe('index.js', () => {
 
                 it('should persist hooked data', () => {
                     expect(store.getPersist('key')).to.equal('hooked');
+                    expect(store.hooks.getPersist).to.have.been.calledWithExactly('value');
                 });
             });
 
@@ -789,6 +791,32 @@ describe('index.js', () => {
                             d: 4
                         }
                     })
+                });
+            });
+        });
+
+        describe('hook', () => {
+            beforeEach(() => {
+                store.persistKeys = {
+                    v: true
+                };
+
+                store.hooks.persist = sinon.stub()
+                    .returns('hooked');
+            });
+
+            afterEach(() => {
+                store.hooks.persist = null;
+            });
+
+            it('should persist hooked data', () => {
+                store.persist({
+                    v: 'value'
+                });
+
+                expect(store.hooks.persist).to.have.been.calledWithExactly('value');
+                expect(memoryStorage).to.deep.equal({
+                    '__p.v': '"hooked"'
                 });
             });
         });
