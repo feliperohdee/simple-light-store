@@ -19,15 +19,17 @@ module.exports = function connect({
 }) {
 	return class extends Component {
 		state = {};
-		
-		componentWillMount() {
-			this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
 
-			if (isFunction(componentWillMount)) {
-				this.willMountArgs = componentWillMount(this.props);
-			}
+		constructor(props, context) {
+		   super(props, context);
+		   
+		   this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
+   
+		   if (isFunction(componentWillMount)) {
+				this.willMountArgs = componentWillMount(props);
+		   }
 		}
-
+		
 		componentDidMount() {
 			const _store = (this.willMountArgs && this.willMountArgs.store) || store;
 
