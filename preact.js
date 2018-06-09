@@ -18,13 +18,14 @@ module.exports = function connect({
     throttle = false
 }) {
     return class extends Component {
-        state = {};
+        constructor(props, context) {
+            super(props, context);
 
-        componentWillMount() {
+            this.state = {};
             this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
 
             if (isFunction(componentWillMount)) {
-                this.willMountArgs = componentWillMount(this.props);
+                this.willMountArgs = componentWillMount(props);
             }
         }
 

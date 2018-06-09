@@ -82,8 +82,7 @@ describe('index.js', () => {
             it('should not call cleanFalsyPersistedKeys and loadPersisted if not persistKeys', () => {
                 store = new Store();
 
-                expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been
-                    .called;
+                expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been.called;
                 expect(Store.prototype.loadPersisted).not.to.have.been.called;
             });
 
@@ -92,8 +91,7 @@ describe('index.js', () => {
                     a: true
                 });
 
-                expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been
-                    .called;
+                expect(Store.prototype.cleanFalsyPersistedKeys).not.to.have.been.called;
                 expect(Store.prototype.loadPersisted).not.to.have.been.called;
             });
 
@@ -102,8 +100,7 @@ describe('index.js', () => {
                     a: true
                 }, {});
 
-                expect(Store.prototype.cleanFalsyPersistedKeys).to.have.been
-                    .called;
+                expect(Store.prototype.cleanFalsyPersistedKeys).to.have.been.called;
                 expect(Store.prototype.loadPersisted).to.have.been.called;
             });
         });
@@ -774,10 +771,30 @@ describe('index.js', () => {
                 });
             });
 
-            it('should ignore inner keys', () => {
+            it('should include', () => {
                 store.persistKeys = {
                     b: {
-                        ignore: ['a', 'b', 'e.a', 'e.b']
+                        include: ['c', 'd', 'e.c', 'e.d']
+                    }
+                };
+
+                store.persist(data);
+                expect(memoryStorage).to.deep.equal({
+                    '__p.b': JSON.stringify({
+                        c: 3,
+                        d: 4,
+                        e: {
+                            c: 3,
+                            d: 4
+                        }
+                    })
+                });
+            });
+            
+            it('should exclude', () => {
+                store.persistKeys = {
+                    b: {
+                        exclude: ['a', 'b', 'e.a', 'e.b']
                     }
                 };
 
@@ -847,7 +864,7 @@ describe('index.js', () => {
                 store.persistKeys = {
                     a: true,
                     b: {
-                        ignore: ['a', 'b', 'e.a', 'e.b']
+                        exclude: ['a', 'b', 'e.a', 'e.b']
                     },
                     c: true,
                     d: true,

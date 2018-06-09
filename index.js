@@ -7,6 +7,7 @@ const isString = require('lodash/isString');
 const isUndefined = require('lodash/isUndefined');
 const merge = require('lodash/merge');
 const omit = require('lodash/omit');
+const pick = require('lodash/pick');
 const reduce = require('lodash/reduce');
 const startsWith = require('lodash/startsWith');
 const throttle = require('lodash/throttle');
@@ -45,7 +46,7 @@ module.exports = class Store extends Events {
 
             if (!silent) {
                 this.trigger(action, data);
-			}
+            }
 
             if (
                 action !== 'store.loadPersisted' &&
@@ -101,7 +102,7 @@ module.exports = class Store extends Events {
             if (!isUndefined(value)) {
                 value = JSON.stringify(value);
 
-                if(isFunction(this.hooks.setPersist)) {
+                if (isFunction(this.hooks.setPersist)) {
                     value = this.hooks.setPersist(value);
                 }
 
@@ -118,7 +119,7 @@ module.exports = class Store extends Events {
 
             value = isString(value) ? JSON.parse(value) : undefined;
 
-            if(isFunction(this.hooks.getPersist)) {
+            if (isFunction(this.hooks.getPersist)) {
                 return this.hooks.getPersist(value);
             }
 
@@ -141,11 +142,22 @@ module.exports = class Store extends Events {
             const persist = this.persistKeys && this.persistKeys[key];
 
             if (persist) {
-                if(isFunction(this.hooks.persist)) {
+                if (isFunction(this.hooks.persist)) {
                     value = this.hooks.persist(value);
                 }
 
-                value = isObjectOnly(value) ? omit(value, persist.ignore) : value;
+                const isObject = isObjectOnly(value);
+
+                if (isObject) {
+                    if (persist.include) {
+                        value = pick(value, persist.include);
+                    }
+                    
+                    if (persist.exclude) {
+                        value = omit(value, persist.exclude);
+                    }
+                }
+
                 this.setPersist(key, value);
             }
         });
@@ -167,7 +179,7 @@ module.exports = class Store extends Events {
                 if (!isUndefined(value)) {
                     this.set({
                         [key]: isObjectOnly(value) ?
-                            merge({}, this.state[key], omit(value, persist.ignore)) : value
+                            merge({}, this.state[key], omit(value, persist.exclude)) : value
                     }, 'store.loadPersisted', false, true);
                 }
             }
