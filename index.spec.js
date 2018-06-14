@@ -110,6 +110,15 @@ describe('index.js', () => {
         it('should return state', () => {
             expect(store.get()).to.equal(store.state);
         });
+        
+        it('should return state segment', () => {
+            store.state = {a: 1};
+            expect(store.get('a')).to.equal(1);
+        });
+        
+        it('should return null segment', () => {
+            expect(store.get('a')).to.be.null;
+        });
     });
 
     describe('set', () => {
@@ -141,17 +150,12 @@ describe('index.js', () => {
             });
 
             const state1 = store.set({
-                    b: 2
-                },
-                'actionName',
-                true
-            );
+                b: 2
+            }, 'actionName', true);
 
             const state2 = store.set({
-                    c: 3
-                },
-                'actionName'
-            );
+                c: 3
+            }, 'actionName');
 
             expect(state1).to.deep.equal({
                 b: 2
@@ -201,10 +205,8 @@ describe('index.js', () => {
             });
 
             const state1 = store.set({
-                    b: 2
-                },
-                'actionName'
-            );
+                b: 2
+            }, 'actionName');
 
             expect(store.trigger).to.have.been.calledTwice;
             expect(store.trigger).to.have.been.calledWithExactly('set', {
@@ -217,12 +219,8 @@ describe('index.js', () => {
 
         it('should not trigger if silent = true', () => {
             store.set({
-                    a: 1
-                },
-                'actionName',
-                false,
-                true
-            );
+                a: 1
+            }, 'actionName', false, true);
 
             expect(store.trigger).not.to.have.been.called;
         });
@@ -243,10 +241,8 @@ describe('index.js', () => {
                 };
 
                 store.set({
-                        a: 1
-                    },
-                    'store.loadPersisted'
-                );
+                    a: 1
+                }, 'store.loadPersisted');
 
                 expect(store.persistThrottled).not.to.have.been.called;
             });
@@ -321,19 +317,15 @@ describe('index.js', () => {
             }]);
 
             store.set({
-                    a: 1
-                },
-                'onChange'
-            );
+                a: 1
+            }, 'onChange');
 
             store.set({
-                    a: 2,
-                    b: {
-                        a: 2
-                    }
-                },
-                'onChange2'
-            );
+                a: 2,
+                b: {
+                    a: 2
+                }
+            }, 'onChange2');
 
             expect(store.state).to.deep.equal({
                 a: 2,
@@ -349,32 +341,24 @@ describe('index.js', () => {
             });
 
             expect(store.set).to.have.been.calledWithExactly({
-                    _a: {
-                        a: 1
-                    },
+                _a: {
                     a: 1
                 },
-                'sync.onChange',
-                true,
-                false
-            );
+                a: 1
+            }, 'sync.onChange', true, false);
 
             expect(store.set).to.have.been.calledWithExactly({
-                    a: 2,
-                    _a: {
-                        a: 2
-                    },
-                    b: {
-                        a: 2
-                    },
-                    _b: {
-                        a: 2
-                    }
+                a: 2,
+                _a: {
+                    a: 2
                 },
-                'sync.onChange2',
-                true,
-                false
-            );
+                b: {
+                    a: 2
+                },
+                _b: {
+                    a: 2
+                }
+            }, 'sync.onChange2', true, false);
 
             expect(store.set).to.have.callCount(4);
         });
@@ -390,20 +374,16 @@ describe('index.js', () => {
             }]);
 
             store.set({
-                    a: {
-                        a: 1
-                    }
-                },
-                'sync'
-            );
+                a: {
+                    a: 1
+                }
+            }, 'sync');
 
             store.set({
-                    a: {
-                        a: 1
-                    }
-                },
-                'sync.onChange'
-            );
+                a: {
+                    a: 1
+                }
+            }, 'sync.onChange');
 
             expect(store.state).to.deep.equal({
                 a: {
@@ -425,12 +405,10 @@ describe('index.js', () => {
             }]);
 
             store.set({
-                    b: {
-                        a: 2
-                    }
-                },
-                'onChange'
-            );
+                b: {
+                    a: 2
+                }
+            }, 'onChange');
 
             expect(store.state).to.deep.equal({
                 b: {
@@ -438,11 +416,7 @@ describe('index.js', () => {
                 }
             });
 
-            expect(store.set).not.to.have.been.calledWithExactly(
-                store.s,
-                true,
-                'sync'
-            );
+            expect(store.set).not.to.have.been.calledWithExactly(store.s, true, 'sync');
             expect(store.set).to.have.been.calledOnce;
         });
 
@@ -456,10 +430,8 @@ describe('index.js', () => {
             }]);
 
             store.set({
-                    a: 1
-                },
-                'onChange'
-            );
+                a: 1
+            }, 'onChange');
 
             expect(store.state).to.deep.equal({
                 a: 1
@@ -472,10 +444,8 @@ describe('index.js', () => {
             }]);
 
             store.set({
-                    a: 1
-                },
-                'onChange'
-            );
+                a: 1
+            }, 'onChange');
 
             expect(store.state).to.deep.equal({
                 a: 1
@@ -489,10 +459,8 @@ describe('index.js', () => {
             }]);
 
             store.set({
-                    a: 1
-                },
-                'onChange'
-            );
+                a: 1
+            }, 'onChange');
 
             expect(store.state).to.deep.equal({
                 a: 1
@@ -502,25 +470,20 @@ describe('index.js', () => {
         it('should call callback', () => {
             const callback = sinon.stub();
 
-            store.sync(
-                [{
-                    filter: (action, changes) => changes.a,
-                    apply: (action, changes) => ({
-                        _a: {
-                            a: changes.a.a
-                        }
-                    })
-                }],
-                callback
-            );
+            store.sync([{
+                filter: (action, changes) => changes.a,
+                apply: (action, changes) => ({
+                    _a: {
+                        a: changes.a.a
+                    }
+                })
+            }], callback);
 
             store.set({
-                    a: {
-                        a: 1
-                    }
-                },
-                'onChange'
-            );
+                a: {
+                    a: 1
+                }
+            }, 'onChange');
 
             expect(callback).to.have.been.calledOnce;
             expect(callback).to.have.been.calledWithExactly(
@@ -635,12 +598,11 @@ describe('index.js', () => {
 
             it('should return undefined', () => {
                 expect(store.getPersist('key_')).to.be.undefined;
-			});
-			
-			describe('hook', () => {
+            });
+
+            describe('hook', () => {
                 beforeEach(() => {
-                    store.hooks.getPersist = sinon.stub()
-                        .returns('hooked');
+                    store.hooks.getPersist = sinon.stub().returns('hooked');
                 });
 
                 afterEach(() => {
@@ -790,7 +752,7 @@ describe('index.js', () => {
                     })
                 });
             });
-            
+
             it('should exclude', () => {
                 store.persistKeys = {
                     b: {

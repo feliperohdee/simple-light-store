@@ -36,7 +36,11 @@ module.exports = class Store extends Events {
         }
     }
 
-    get() {
+    get(key) {
+        if (key) {
+            return this.state[key] || null;
+        }
+
         return this.state;
     }
 
@@ -66,29 +70,25 @@ module.exports = class Store extends Events {
                 return;
             }
 
-            const newState = reduce(
-                filters,
-                (reduction, {
-                    filter,
-                    apply
-                }) => {
-                    if (isFunction(filter) && isFunction(apply)) {
-                        if (filter(action, changes)) {
-                            const data = apply(action, changes);
+            const newState = reduce(filters, (reduction, {
+                filter,
+                apply
+            }) => {
+                if (isFunction(filter) && isFunction(apply)) {
+                    if (filter(action, changes)) {
+                        const data = apply(action, changes);
 
-                            if (isObject(data)) {
-                                reduction = {
-                                    ...reduction,
-                                    ...data
-                                };
-                            }
+                        if (isObject(data)) {
+                            reduction = {
+                                ...reduction,
+                                ...data
+                            };
                         }
                     }
+                }
 
-                    return reduction;
-                },
-                this.state
-            );
+                return reduction;
+            }, this.state);
 
             if (this.state !== newState) {
                 this.set(newState, `sync.${action}`, true, false);
@@ -152,7 +152,7 @@ module.exports = class Store extends Events {
                     if (persist.include) {
                         value = pick(value, persist.include);
                     }
-                    
+
                     if (persist.exclude) {
                         value = omit(value, persist.exclude);
                     }
@@ -178,8 +178,7 @@ module.exports = class Store extends Events {
 
                 if (!isUndefined(value)) {
                     this.set({
-                        [key]: isObjectOnly(value) ?
-                            merge({}, this.state[key], omit(value, persist.exclude)) : value
+                        [key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist.exclude)) : value
                     }, 'store.loadPersisted', false, true);
                 }
             }
