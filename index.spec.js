@@ -116,7 +116,16 @@ describe('index.js', () => {
             expect(store.get('a')).to.equal(1);
         });
         
-        it('should return null segment', () => {
+        it('should return deep state segment', () => {
+            store.state = {a: {b: 1}};
+            expect(store.get(['a', 'b'])).to.equal(1);
+        });
+        
+        it('should return default', () => {
+            expect(store.get('a', 'default')).to.equal('default');
+        });
+       
+        it('should return null', () => {
             expect(store.get('a')).to.be.null;
         });
     });
