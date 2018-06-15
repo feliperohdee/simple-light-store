@@ -1,5 +1,4 @@
 const forEach = require('lodash/forEach');
-const get = require('lodash/get');
 const isArray = require('lodash/isArray');
 const isFunction = require('lodash/isFunction');
 const isNil = require('lodash/isNil');
@@ -35,14 +34,6 @@ module.exports = class Store extends Events {
             this.loadPersisted();
             this.cleanFalsyPersistedKeys();
         }
-    }
-
-    get(key, defaultValue = null) {
-        if (key) {
-            return key.length === 1 ? (this.state[key] || defaultValue) : get(this.state, key, defaultValue);
-        }
-
-        return this.state;
     }
 
     set(data, action = 'set', overwrite = false, silent = false) {

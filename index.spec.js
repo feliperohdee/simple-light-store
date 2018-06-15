@@ -106,30 +106,6 @@ describe('index.js', () => {
         });
     });
 
-    describe('get', () => {
-        it('should return state', () => {
-            expect(store.get()).to.equal(store.state);
-        });
-        
-        it('should return state segment', () => {
-            store.state = {a: 1};
-            expect(store.get('a')).to.equal(1);
-        });
-        
-        it('should return deep state segment', () => {
-            store.state = {a: {b: 1}};
-            expect(store.get(['a', 'b'])).to.equal(1);
-        });
-        
-        it('should return default', () => {
-            expect(store.get('a', 'default')).to.equal('default');
-        });
-       
-        it('should return null', () => {
-            expect(store.get('a')).to.be.null;
-        });
-    });
-
     describe('set', () => {
         beforeEach(() => {
             sinon.spy(store, 'trigger');
