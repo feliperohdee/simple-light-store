@@ -757,30 +757,30 @@ describe('index.js', () => {
                     })
                 });
             });
-        });
 
-        describe('hook', () => {
-            beforeEach(() => {
-                store.persistKeys = {
-                    v: true
-                };
+            describe('hook', () => {
+                beforeEach(() => {
+                    store.persistKeys = {
+                        v: true
+                    };
 
-                store.hooks.persist = sinon.stub()
-                    .returns('hooked');
-            });
-
-            afterEach(() => {
-                store.hooks.persist = null;
-            });
-
-            it('should persist hooked data', () => {
-                store.persist({
-                    v: 'value'
+                    store.hooks.persist = sinon.stub()
+                        .returns('hooked');
                 });
 
-                expect(store.hooks.persist).to.have.been.calledWithExactly('value');
-                expect(memoryStorage).to.deep.equal({
-                    '__p.v': '"hooked"'
+                afterEach(() => {
+                    store.hooks.persist = null;
+                });
+
+                it('should persist hooked data', () => {
+                    store.persist({
+                        v: 'value'
+                    });
+
+                    expect(store.hooks.persist).to.have.been.calledWithExactly('value');
+                    expect(memoryStorage).to.deep.equal({
+                        '__p.v': '"hooked"'
+                    });
                 });
             });
         });
@@ -795,13 +795,7 @@ describe('index.js', () => {
                         a: 1,
                         b: 2,
                         c: 3,
-                        d: 4,
-                        e: {
-                            a: 1,
-                            b: 2,
-                            c: 3,
-                            d: 4
-                        }
+                        d: 4
                     }),
                     '__p.c': JSON.stringify([1, 2, 3]),
                     '__p.d': 'true',
@@ -810,9 +804,7 @@ describe('index.js', () => {
 
                 store.persistKeys = {
                     a: true,
-                    b: {
-                        exclude: ['a', 'b', 'e.a', 'e.b']
-                    },
+                    b: true,
                     c: true,
                     d: true,
                     e: true
@@ -847,12 +839,10 @@ describe('index.js', () => {
                 expect(store.state).to.deep.equal({
                     a: 1,
                     b: {
+                        a: 1,
+                        b: 2,
                         c: 3,
-                        d: 4,
-                        e: {
-                            c: 3,
-                            d: 4
-                        }
+                        d: 4
                     },
                     c: [1, 2, 3],
                     d: true,
@@ -885,12 +875,12 @@ describe('index.js', () => {
                 expect(store.state).to.deep.equal({
                     a: 1,
                     b: {
+                        a: 1,
+                        b: 2,
                         c: 3,
                         d: 4,
                         e: {
-                            a: 5,
-                            c: 3,
-                            d: 4
+                            a: 5
                         }
                     },
                     c: [1, 2, 3],
@@ -916,6 +906,21 @@ describe('index.js', () => {
                             a: 5
                         }
                     }
+                });
+            });
+
+            describe('hook', () => {
+                beforeEach(() => {
+                    store.hooks.mergePersisted = sinon.spy(_, 'merge');
+                });
+
+                afterEach(() => {
+                    _.merge.restore();
+                });
+
+                it('should use hooked merge', () => {
+                    store.loadPersisted();
+                    expect(_.merge).to.have.been.called;
                 });
             });
         });

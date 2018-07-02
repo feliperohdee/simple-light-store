@@ -170,7 +170,7 @@ module.exports = class Store extends Events {
 
                 if (!isUndefined(value)) {
                     this.set({
-                        [key]: isObjectOnly(value) ? merge({}, this.state[key], omit(value, persist.exclude)) : value
+                        [key]: isObjectOnly(value) ? (this.hooks.mergePersisted ? this.hooks.mergePersisted(this.state[key], value) : merge({}, this.state[key], value)) : value
                     }, 'store.loadPersisted', false, true);
                 }
             }
