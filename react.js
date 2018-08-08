@@ -33,7 +33,7 @@ module.exports = function connect({
             const _store = (this.willMountArgs && this.willMountArgs.store) || store;
 
             this.update();
-            this.unsubscribe = _store.subscribe(() => this.update());
+            this.unsubscribe = _store.subscribe(() => !this.destroyed && this.update());
 
             if (isFunction(componentDidMount)) {
                 componentDidMount({
@@ -44,7 +44,9 @@ module.exports = function connect({
         }
 
         componentWillUnmount() {
+            this.destroyed = true;
             this.unsubscribe && this.unsubscribe();
+            this.updateComponent.cancel && this.updateComponent.cancel();
 
             if (isFunction(componentWillUnmount)) {
                 componentWillUnmount({
