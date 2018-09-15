@@ -106,6 +106,26 @@ describe('index.js', () => {
         });
     });
 
+    describe.only('destroy', () => {
+        beforeEach(() => {
+           sinon.spy(store.persistThrottled, 'cancel');
+        });
+
+        afterEach(() => {
+            store.persistThrottled.cancel.restore();
+        });
+
+        it('should empty state and events', () => {
+            store.subscribe(() => null);
+            expect(store.state).to.deep.equal({});
+            expect(store._fns.length).to.equal(1);
+            store.destroy();
+            expect(store.state).to.be.null;
+            expect(store._fns).to.be.null;
+            expect(store.persistThrottled.cancel).to.have.been.called;
+        });
+    });
+
     describe('set', () => {
         beforeEach(() => {
             sinon.spy(store, 'trigger');

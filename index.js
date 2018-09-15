@@ -36,6 +36,12 @@ module.exports = class Store extends Events {
         }
     }
 
+    destroy() {
+        this.state = null;
+        this.persistThrottled.cancel();
+        super.destroy();
+    }
+
     set(data, action = 'set', overwrite = false, silent = false) {
         if (!isNil(data)) {
             this.state = overwrite ? data : assign(assign({}, this.state), data);
