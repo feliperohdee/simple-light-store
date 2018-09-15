@@ -106,7 +106,7 @@ describe('index.js', () => {
         });
     });
 
-    describe.only('destroy', () => {
+    describe('destroy', () => {
         beforeEach(() => {
            sinon.spy(store.persistThrottled, 'cancel');
         });
