@@ -43,6 +43,10 @@ module.exports = class Store extends Events {
     }
 
     set(data, action = 'set', overwrite = false, silent = false) {
+        if(this.state === null) {
+            return;
+        }
+
         if (!isNil(data)) {
             this.state = overwrite ? data : assign(assign({}, this.state), data);
 
