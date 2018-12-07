@@ -808,6 +808,7 @@ describe('index.js', () => {
         describe('loadPersisted', () => {
             beforeEach(() => {
                 sinon.spy(store, 'set');
+                sinon.spy(store, 'trigger');
 
                 memoryStorage = {
                     '__p.a': '1',
@@ -833,6 +834,7 @@ describe('index.js', () => {
 
             afterEach(() => {
                 store.set.restore();
+                store.trigger.restore();
             });
 
             it('should not load if no persistKeys', () => {
@@ -927,6 +929,13 @@ describe('index.js', () => {
                         }
                     }
                 });
+            });
+
+            it('should trigger store.loadPersisted and set loaded', () => {
+                expect(store.loaded).to.be.false;
+                store.loadPersisted();
+                expect(store.trigger).to.have.been.calledWithExactly('store.loadPersisted');
+                expect(store.loaded).to.be.true;
             });
 
             describe('hook', () => {

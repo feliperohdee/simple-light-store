@@ -24,6 +24,7 @@ module.exports = class Store extends Events {
     constructor(state = {}, persistKeys = null, storage = null, hooks = {}) {
         super();
 
+        this.loaded = false;
         this.persistKeys = persistKeys;
         this.state = state;
         this.storage = storage;
@@ -185,5 +186,8 @@ module.exports = class Store extends Events {
                 }
             }
         });
+
+        this.trigger('store.loadPersisted');
+        this.loaded = true;
     }
 };
