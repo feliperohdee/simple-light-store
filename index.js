@@ -44,7 +44,7 @@ module.exports = class Store extends Events {
     }
 
     set(data, action = 'set', overwrite = false, silent = false) {
-        if(this.state === null) {
+        if (this.state === null) {
             return;
         }
 
@@ -189,5 +189,13 @@ module.exports = class Store extends Events {
 
         this.trigger('store.loadPersisted');
         this.loaded = true;
+    }
+
+    onLoadPersisted(callback) {
+        if (this.loaded) {
+            callback();
+        } else {
+            this.subscribeOnce('store.loadPersisted', callback);
+        }
     }
 };

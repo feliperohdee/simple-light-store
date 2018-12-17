@@ -953,5 +953,30 @@ describe('index.js', () => {
                 });
             });
         });
+        
+        
+        describe('onLoadPersisted', () => {
+            beforeEach(() => {
+                store.persistKeys = {
+                    a: true
+                };
+            });
+
+            it('should call callback if already loaded', () => {
+                const stub = sinon.stub();
+
+                store.loaded = true;
+                store.onLoadPersisted(stub);
+                expect(stub).to.have.been.called;
+            });
+            
+            it('should call callback on load', () => {
+                const stub = sinon.stub();
+
+                store.onLoadPersisted(stub);
+                store.loadPersisted();
+                expect(stub).to.have.been.called;
+            });
+        });
     });
 });
