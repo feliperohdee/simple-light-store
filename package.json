@@ -16,7 +16,7 @@
     "deploy": "npm version patch -m 'Bump %s' && git push origin master && npm publish"
   },
   "dependencies": {
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.13",
     "preact": "^8.2.7"
   }
 }
