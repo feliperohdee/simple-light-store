@@ -150,10 +150,6 @@ describe('index.js', () => {
         });
 
         it('should replace state', () => {
-            const state = store.set({
-                a: 1
-            });
-
             const state1 = store.set({
                 b: 2
             }, 'actionName', true);
@@ -205,11 +201,11 @@ describe('index.js', () => {
         });
 
         it('should trigger', () => {
-            const state = store.set({
+            store.set({
                 a: 1
             });
 
-            const state1 = store.set({
+            store.set({
                 b: 2
             }, 'actionName');
 
@@ -953,7 +949,6 @@ describe('index.js', () => {
                 });
             });
         });
-        
         
         describe('onLoadPersisted', () => {
             beforeEach(() => {
