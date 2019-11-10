@@ -1,5 +1,3 @@
-[![CircleCI](https://circleci.com/gh/feliperohdee/smallorange-light-store.svg?style=svg)](https://circleci.com/gh/feliperohdee/smallorange-light-store)
-
 ## Sample
 
 		const store = new Store();
