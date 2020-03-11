@@ -8,8 +8,6 @@ const isUndefined = require('lodash/isUndefined');
 const merge = require('lodash/merge');
 const omit = require('lodash/omit');
 const pick = require('lodash/pick');
-const reduce = require('lodash/reduce');
-const startsWith = require('lodash/startsWith');
 const throttle = require('lodash/throttle');
 
 const Events = require('./Events');
@@ -65,39 +63,6 @@ module.exports = class Store extends Events {
         }
 
         return this.state;
-    }
-
-    sync(filters, callback) {
-        return this.subscribe((action, changes) => {
-            if (startsWith(action, 'sync')) {
-                return;
-            }
-
-            const newState = reduce(filters, (reduction, {
-                filter,
-                apply
-            }) => {
-                if (isFunction(filter) && isFunction(apply)) {
-                    if (filter(action, changes)) {
-                        const data = apply(action, changes);
-
-                        if (isObject(data)) {
-                            reduction = {
-                                ...reduction,
-                                ...data
-                            };
-                        }
-                    }
-                }
-
-                return reduction;
-            }, this.state);
-
-            if (this.state !== newState) {
-                this.set(newState, `sync.${action}`, true, false);
-                isFunction(callback) && callback(newState, `sync.${action}`);
-            }
-        });
     }
 
     setPersist(key, value) {

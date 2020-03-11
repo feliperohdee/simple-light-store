@@ -68,7 +68,7 @@ module.exports = function connect({
 
             forEach(mapped, (value, key) => {
                 if (!shouldUpdate && value !== this.state[key]) {
-                    this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
+                    this.state = mapped;
                     shouldUpdate = true;
 
                     this.updateComponent();
@@ -78,7 +78,7 @@ module.exports = function connect({
             if (!shouldUpdate) {
                 forEach(this.state, (value, key) => {
                     if (!shouldUpdate && !(key in mapped)) {
-                        this.state = mapped; /* eslint-disable-line react/no-direct-mutation-state */
+                        this.state = mapped;
 
                         this.updateComponent();
                     }
