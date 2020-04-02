@@ -21,7 +21,7 @@ module.exports = function connect({
         constructor(props, context) {
             super(props, context);
 
-            this.state = {};
+            this.stateMeta = {};
             this.updateComponent = throttle ? lodashThrottle(this.forceUpdate.bind(this), isNumber(throttle) ? throttle : 50) : this.forceUpdate.bind(this);
 
             if (isFunction(componentWillMount)) {
@@ -67,8 +67,8 @@ module.exports = function connect({
             const mapped = pick(_store.state, updateProps);
 
             forEach(mapped, (value, key) => {
-                if (!shouldUpdate && value !== this.state[key]) {
-                    this.state = mapped;
+                if (!shouldUpdate && value !== this.stateMeta[key]) {
+                    this.stateMeta = mapped;
                     shouldUpdate = true;
 
                     this.updateComponent();
@@ -76,9 +76,9 @@ module.exports = function connect({
             });
 
             if (!shouldUpdate) {
-                forEach(this.state, (value, key) => {
+                forEach(this.stateMeta, (value, key) => {
                     if (!shouldUpdate && !(key in mapped)) {
-                        this.state = mapped;
+                        this.stateMeta = mapped;
 
                         this.updateComponent();
                     }
